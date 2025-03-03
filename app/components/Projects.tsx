@@ -20,7 +20,7 @@ function ProjectCard({
     githubLink,
 }: ProjectProps) {
     return (
-			<CardWrapper className="overflow-hidden group bg-indigo-900">
+			<CardWrapper className="overflow-hidden group bg-gradient-to-r from-blue-600 to-purple-600 text-white  hover:from-blue-700 hover:to-purple-700">
 				<div className="relative h-48 mb-4">
 					<Image
 						src={image || "/placeholder.svg"}
@@ -32,13 +32,13 @@ function ProjectCard({
 				<h3 className="text-lg font-semibold group-hover:text-primary transition-colors mb-2">
 					{title}
 				</h3>
-				<p className="text-gray-400 text-sm mb-4">{description}</p>
+				<p className="text-gray-300 text-sm mb-4">{description}</p>
 				<div className="flex gap-4">
 					<a
 						href={demoLink}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors"
+						className="flex items-center gap-2 px-4 py-2 border border-white text-primary rounded hover:bg-primary hover:text-white transition-colors"
 					>
 						<ExternalLink size={16} /> Demo
 					</a>
@@ -109,8 +109,8 @@ export default function Projects() {
 
     return (
 			<section
-				className="py-10 relative overflow-hidden bg-gradient-to-tr from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 transition-colors"
-				id="works"
+				className="py-1 relative overflow-hidden bg-gradient-to-tr from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 transition-colors"
+				id="project"
 			>
 				{/*  Illustrations */}
 				<Illustrations />
@@ -122,7 +122,7 @@ export default function Projects() {
 						digital solutions.
 					</p>
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-14">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
 					{projects.map((project, index) => (
 						<ProjectCard key={index} {...project} />
 					))}

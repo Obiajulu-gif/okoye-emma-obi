@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
+import { FaArrowUp } from "react-icons/fa"
 
 const sections = [
   { id: "hero", label: "Home" },
   { id: "about", label: "About" },
+  { id: "project", label: "Project" },
   { id: "experience", label: "Experience" },
   { id: "skills", label: "Skills" },
   { id: "services", label: "Services" },
@@ -17,16 +19,17 @@ export default function FloatingNav() {
   const [activeSection, setActiveSection] = useState("hero")
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
-          }
-        })
-      },
-      { threshold: 0.5 },
-    )
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id)
+        }
+      })
+    }
+
+    const observer = new IntersectionObserver(handleIntersection, {
+      threshold: 0.6,
+    })
 
     sections.forEach(({ id }) => {
       const element = document.getElementById(id)
@@ -37,34 +40,48 @@ export default function FloatingNav() {
   }, [])
 
   return (
-    <motion.div
+    <motion.nav
       className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 1 }}
+      transition={{ delay: 0.5, duration: 0.5 }}
     >
-      <div className="flex flex-col gap-3">
+      <div className="bg-white dark:bg-gray-800 rounded-full shadow-lg p-2 flex flex-col gap-4">
         {sections.map(({ id, label }) => (
           <button
             key={id}
-            onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
-            className="group relative flex items-center"
+            onClick={() =>
+              document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
+            }
+            className={`group relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
+              activeSection === id
+                ? "bg-blue-600 dark:bg-blue-400 scale-110"
+                : "bg-gray-300 dark:bg-gray-600 hover:scale-105"
+            }`}
             aria-label={`Scroll to ${label}`}
           >
-            <span className="absolute right-8 px-2 py-1 rounded bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="absolute right-12 w-auto p-1 font-medium text-sm text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               {label}
             </span>
-            <div
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                activeSection === id
-                  ? "bg-blue-600 dark:bg-blue-400 scale-125"
-                  : "bg-gray-400 dark:bg-gray-600 hover:scale-110"
-              }`}
-            />
           </button>
         ))}
       </div>
-    </motion.div>
+      <AnimatePresence>
+        {activeSection !== "hero" && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() =>
+              document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="mt-4 flex items-center justify-center w-8 h-8 bg-blue-600 dark:bg-blue-400 text-white rounded-full shadow hover:scale-110 transition-transform"
+            aria-label="Back to Top"
+          >
+            <FaArrowUp className="w-4 h-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   )
 }
-

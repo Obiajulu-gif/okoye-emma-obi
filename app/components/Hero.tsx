@@ -1,29 +1,45 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { FaGithub, FaLinkedin } from "react-icons/fa"
+import Image from "next/image";
+import Link from "next/link";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import { ArrowDown } from "lucide-react"
-import { motion } from "framer-motion"
+import { ArrowDown } from "lucide-react";
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 const CodePattern = () => (
-  <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
-    <pattern
-      id="pattern-circles"
-      x="0"
-      y="0"
-      width="50"
-      height="50"
-      patternUnits="userSpaceOnUse"
-      patternContentUnits="userSpaceOnUse"
-    >
-      <circle id="pattern-circle" cx="10" cy="10" r="1.6257413380501518" fill="#000"></circle>
-    </pattern>
-    <rect id="rect" x="0" y="0" width="100%" height="100%" fill="url(#pattern-circles)"></rect>
-  </svg>
-)
+	<svg
+		className="absolute inset-0 w-full h-full opacity-5"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<pattern
+			id="pattern-circles"
+			x="0"
+			y="0"
+			width="50"
+			height="50"
+			patternUnits="userSpaceOnUse"
+			patternContentUnits="userSpaceOnUse"
+		>
+			<circle
+				id="pattern-circle"
+				cx="10"
+				cy="10"
+				r="1.6257413380501518"
+				fill="#000"
+			></circle>
+		</pattern>
+		<rect
+			id="rect"
+			x="0"
+			y="0"
+			width="100%"
+			height="100%"
+			fill="url(#pattern-circles)"
+		></rect>
+	</svg>
+);
 const TypewriterEffect = () => {
 	const texts = [
 		"Software Developer",
@@ -65,7 +81,7 @@ const TypewriterEffect = () => {
 };
 
 export default function Hero() {
-  return (
+	return (
 		<section
 			id="hero"
 			className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
@@ -99,8 +115,7 @@ export default function Hero() {
 						<p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto lg:mx-0">
 							Crafting exceptional digital experiences with modern web
 							technologies. Specialized in building scalable full-stack
-							applications using Nextjs, MongoDB, Express.js, React, and
-							Node.js.
+							applications.
 						</p>
 						<div className="flex justify-center lg:justify-start space-x-4 mb-8">
 							<Link
@@ -131,9 +146,11 @@ export default function Hero() {
 									.getElementById("about")
 									?.scrollIntoView({ behavior: "smooth" })
 							}
-							className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+							className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl rounded-full"
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
+							animate={{ y: [0, -10, 0] }}
+							transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
 						>
 							Learn More
 							<ArrowDown className="w-4 h-4" />

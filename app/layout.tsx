@@ -25,11 +25,14 @@ export const metadata = {
 	"twitter:description":
 		"Portfolio of Okoye Emmanuel Obiajulu, a Software Developer specializing in full-stack web applications.",
 	"twitter:image": "/images/emmanuel.png",
-	"twitter:url": "https://x.com",
+	"twitter:url": "https://www.x.com/okoye_emma_obi",
 	"theme-color": "#ffffff",
 	"application-name": "Okoye Emmanuel Obiajulu Portfolio",
 	"msapplication-TileColor": "#da532c",
-	"msapplication-config": "/browserconfig.xml",
+  "msapplication-config": "/browserconfig.xml",
+   icons: {
+        icon: "/images/emmanuel.png",
+    },
 };
 
 export const viewport = "width=device-width, initial-scale=1";

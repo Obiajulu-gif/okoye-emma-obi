@@ -7,7 +7,7 @@ export default function About() {
   const skills = [
     {
       icon: <Code className="w-8 h-8 text-blue-500" />,
-      title: "Programming",
+      title: "Language",
       description: "Python, JavaScript, C, TypeScript",
     },
     {

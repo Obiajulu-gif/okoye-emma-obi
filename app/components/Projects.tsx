@@ -38,7 +38,7 @@ function ProjectCard({
 						href={demoLink}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="flex items-center gap-2 px-4 py-2 border border-white text-primary rounded hover:bg-primary hover:text-white transition-colors"
+						className="flex items-center gap-2 px-4 py-2 border border-white text-white rounded hover:bg-primary hover:text-white transition-colors"
 					>
 						<ExternalLink size={16} /> Demo
 					</a>
@@ -46,7 +46,7 @@ function ProjectCard({
 						href={githubLink}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors"
+						className="flex items-center gap-2 px-4 py-2 border border-white text-white rounded hover:bg-primary hover:text-white transition-colors"
 					>
 						Code
 					</a>

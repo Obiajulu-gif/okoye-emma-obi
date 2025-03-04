@@ -4,46 +4,46 @@ import { Briefcase, Calendar, MapPin, Globe } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import AnimatedSectionHeader from "./AnimatedSectionHeader"
+import Illustrations from "./Illustrations"
 
 export default function Experience() {
   const experiences = [
     {
-      company: "Freelance",
+      company: "Netwiver Technologies",
+      location: "Remote",
+      period: "2024 - Present",
+      role: "Frontend Developer",
+      responsibilities: [
+        "Developing custom web applications",
+        "Building responsive and scalable frontend interfaces with React JS and PHP",
+        "Implementing secure backend systems with Node.js and Nextjs",
+        "Creating RESTful APIs and managing MongoDB databases",
+        "Collaborating with Developer to deliver high-quality solutions",
+      ],
+    },
+    {
+      company: "ChainMove",
       location: "Remote",
       period: "2024 - Present",
       role: "MERN Stack Developer",
       responsibilities: [
-        "Developing custom web applications for international clients",
-        "Building responsive and scalable frontend interfaces with React",
-        "Implementing secure backend systems with Node.js and Express",
-        "Creating RESTful APIs and managing MongoDB databases",
-        "Collaborating with clients to deliver high-quality solutions",
-      ],
-    },
-    {
-      company: "Salaba Fasteners",
-      location: "Saudi Arabia (Hybrid)",
-      period: "2024 - Present",
-      role: "MERN Stack Developer",
-      responsibilities: [
-        "Developed full-fledged ERP system using MERN stack",
+        "Developed full-fledged Uber-like transportation system using MERN stack",
         "Designed and implemented RESTful APIs",
         "Created responsive interfaces with React.js and Redux",
         "Implemented secure authentication systems",
         "Utilized WebSockets for real-time features",
       ],
     },
-    {
-      company: "TechVention",
-      location: "Lahore, Pakistan",
-      period: "2022 - 2024",
-      role: "Software Engineer",
+        {
+      company: "Divine Mercy Computer",
+      location: "Adazi-Nnukwu, Anambra",
+      period: "2017 - 2019",
+      role: "Manager",
       responsibilities: [
-        "Migrated codebase to Fastify with TypeScript",
-        "Implemented OOP concepts for scalability",
-        "Built backend REST API and OAuth",
-        "Integrated third-party APIs",
-        "Implemented i18n features",
+        "Managed the cyber cafe",
+        "Performed book binding",
+        "Provided professional typing services",
+        "Anchored day-to-day activities",
       ],
     },
   ]
@@ -53,6 +53,7 @@ export default function Experience() {
       id="experience"
       className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 transition-colors duration-300 overflow-hidden relative"
     >
+      <Illustrations/>
       <div className="container mx-auto px-6 relative z-10">
         <AnimatedSectionHeader title="Professional Experience" />
         <div className="space-y-16">
@@ -99,9 +100,7 @@ export default function Experience() {
           ))}
         </div>
       </div>
-      <div className="absolute bottom-0 right-0 w-64 h-64 -mb-32 -mr-32 opacity-20">
-        <Image src="/placeholder.svg?height=256&width=256" alt="Decorative background" width={256} height={256} />
-      </div>
+      
     </section>
   )
 }

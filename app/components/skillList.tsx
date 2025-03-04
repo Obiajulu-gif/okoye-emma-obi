@@ -75,6 +75,10 @@ const skillList = [
 		name: "PHP",
 		logo: "/logos/php.png",
 	},
+	{
+		name: "Solidity",
+		logo: "/logos/solidity.png",
+	},
 ];
 
 export default skillList;

@@ -15,7 +15,7 @@ const marqueeAnimation: MarqueeAnimationType = (element, scrollWidth) => {
       { transform: `translateX(-${scrollWidth}px)` },
     ],
     {
-      duration: 12000,
+      duration: 20000,
       easing: "linear",
       iterations: Infinity,
     }
@@ -60,7 +60,7 @@ const Marquee: React.FC<SkillsProps> = ({ skills }) => {
 			<Illustrations />
 			<div className="flex whitespace-nowrap p-5 lg:p-7" ref={marqueeRef}>
 				{/* First copy */}
-				<div className="flex gap-8 lg:gap-24">
+				<div className="flex gap-20 lg:gap-24">
 					{skills.map(({ name, logo }, index) => (
 						<span
 							key={`first-${index}`}

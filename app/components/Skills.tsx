@@ -14,75 +14,85 @@ const skills = [
   {
     icon: Code,
     name: "Frontend Development",
-    tech: "React.js, Next.js",
+    tech: "JavaScript, TypeScript, React.js, Next.js",
     description:
-      "Building responsive and interactive user interfaces with modern React features and Next.js for optimal performance.",
+      "Building responsive and interactive user interfaces leveraging React.js, Next.js, and robust JavaScript/TypeScript fundamentals.",
     color: "text-blue-500",
   },
   {
     icon: Server,
     name: "Backend Development",
-    tech: "Node.js, Express, Fastify",
-    description: "Creating robust server-side applications with focus on scalability and clean architecture.",
+    tech: "Node.js, Express.js, Flask",
+    description:
+      "Creating scalable and secure server-side applications using Node.js, Express.js, and Fastify with a clean architecture.",
     color: "text-green-500",
   },
   {
     icon: Database,
     name: "Database Management",
-    tech: "MongoDB, Mongoose",
-    description: "Designing and implementing efficient database schemas and queries for optimal data management.",
+    tech: "MongoDB, Mongoose, SQL",
+    description:
+      "Designing and implementing efficient database solutions for both NoSQL (MongoDB/Mongoose) and SQL systems.",
     color: "text-purple-500",
   },
   {
     icon: Layout,
     name: "UI/UX Design",
-    tech: "Tailwind CSS, Material UI",
-    description: "Crafting beautiful and intuitive user interfaces with modern design principles and frameworks.",
+    tech: "TailwindCSS, Material UI",
+    description:
+      "Crafting beautiful and intuitive user interfaces with modern design principles using TailwindCSS and Material UI.",
     color: "text-pink-500",
   },
   {
     icon: GitBranch,
     name: "Version Control",
     tech: "Git, GitHub",
-    description: "Managing code versions efficiently with Git and collaborating effectively through GitHub.",
+    description:
+      "Managing code versions efficiently with Git and collaborating effectively using GitHub.",
     color: "text-orange-500",
   },
   {
     icon: Terminal,
-    name: "TypeScript",
-    tech: "TypeScript, JavaScript",
-    description: "Writing type-safe code for better maintainability and developer experience.",
+    name: "Programming Languages",
+    tech: "TypeScript, JavaScript, Python, C, PHP",
+    description:
+      "Writing robust and type-safe code using modern programming languages to build scalable applications.",
     color: "text-yellow-500",
   },
   {
     icon: Layers,
     name: "State Management",
     tech: "Redux, Context API",
-    description: "Managing complex application state with modern state management solutions.",
+    description:
+      "Managing complex application state with modern state management solutions like Redux and Context API.",
     color: "text-indigo-500",
   },
   {
     icon: Cpu,
     name: "API Development",
     tech: "REST, GraphQL",
-    description: "Designing and implementing efficient APIs for seamless data communication.",
+    description:
+      "Designing and implementing efficient APIs for seamless data communication using REST and GraphQL.",
     color: "text-red-500",
   },
   {
     icon: Globe,
     name: "Web Performance",
     tech: "Optimization, SEO",
-    description: "Optimizing web applications for speed, accessibility, and search engine visibility.",
+    description:
+      "Optimizing web applications for speed, accessibility, and search engine visibility through advanced techniques.",
     color: "text-teal-500",
   },
   {
     icon: Workflow,
     name: "Agile Methodologies",
     tech: "Scrum, Kanban",
-    description: "Working efficiently in agile environments with focus on continuous delivery.",
+    description:
+      "Working efficiently in agile environments using Scrum and Kanban for continuous delivery and iterative improvement.",
     color: "text-cyan-500",
   },
-]
+];
+
 
 export default function Skills() {
   return (

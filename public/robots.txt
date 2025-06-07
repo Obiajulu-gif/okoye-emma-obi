@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.emmanuelokoye.xyz
+
+# Sitemaps
+Sitemap: https://www.emmanuelokoye.xyz/sitemap.xml

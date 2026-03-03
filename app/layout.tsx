@@ -1,61 +1,65 @@
-import "./globals.css"
-import { Inter } from "next/font/google"
-import type React from "react"
-import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "@/components/mode-toggle"
+import type { Metadata } from "next";
+import { Manrope, Space_Grotesk } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"] })
+import "./globals.css";
 
-export const metadata = {
-	title: "Okoye Emmanuel Obiajulu - Software Developer",
-	description:
-		"Portfolio of Okoye Emmanuel Obiajulu, a Software Developer specializing in full-stack web applications.",
-	generator: "v0.dev",
-	author: "Okoye Emmanuel Obiajulu",
-	keywords: "Software Developer, Full-Stack, Web Applications, Portfolio",
-	charset: "UTF-8",
-	robots: "index, follow",
-	"og:title": "Okoye Emmanuel Obiajulu - Software Developer",
-	"og:description":
-		"Portfolio of Okoye Emmanuel Obiajulu, a Software Developer specializing in full-stack web applications.",
-	"og:image": "/images/emmanuel.png",
-	"og:url": "https://okoye-emma-obi.vercel.app/",
-	"twitter:card": "summary_large_image",
-	"twitter:title": "Okoye Emmanuel Obiajulu - Software Developer",
-	"twitter:description":
-		"Portfolio of Okoye Emmanuel Obiajulu, a Software Developer specializing in full-stack web applications.",
-	"twitter:image": "/images/emmanuel.png",
-	"twitter:url": "https://www.x.com/okoye_emma_obi",
-	"theme-color": "#ffffff",
-	"application-name": "Okoye Emmanuel Obiajulu Portfolio",
-	"msapplication-TileColor": "#da532c",
-  "msapplication-config": "/browserconfig.xml",
-   icons: {
-        icon: "/images/emmanuel.png",
-    },
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
+
+export const metadata: Metadata = {
+  title: "Okoye Emmanuel Obiajulu | Full-Stack & Stellar Engineer",
+  description:
+    "Portfolio of Okoye Emmanuel Obiajulu featuring full-stack engineering work, Stellar/Soroban OSS contributions, and client-ready delivery experience.",
+  keywords: [
+    "Okoye Emmanuel Obiajulu",
+    "Full-Stack Developer",
+    "Stellar",
+    "Soroban",
+    "Next.js",
+    "Portfolio",
+  ],
+  metadataBase: new URL("https://okoye-emma-obi.vercel.app"),
+  openGraph: {
+    title: "Okoye Emmanuel Obiajulu | Full-Stack & Stellar Engineer",
+    description:
+      "Production-grade web and blockchain engineering with strong UX and maintainable architecture.",
+    url: "https://okoye-emma-obi.vercel.app",
+    siteName: "Okoye Emmanuel Obiajulu Portfolio",
+    images: [{ url: "/images/emmanuel.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Okoye Emmanuel Obiajulu | Full-Stack & Stellar Engineer",
+    description:
+      "Production-grade web and blockchain engineering with strong UX and maintainable architecture.",
+    images: ["/images/emmanuel.png"],
+  },
 };
-
-export const viewport = "width=device-width, initial-scale=1";
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} min-h-screen bg-background text-foreground antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="fixed top-4 right-4 z-50">
-            <ModeToggle />
-          </div>
           {children}
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
-
-
-
-import './globals.css'

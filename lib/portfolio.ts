@@ -1,6 +1,12 @@
 import { ObjectId } from "mongodb";
 
-import { defaultAwards, defaultProjects, defaultSiteContent, defaultSkills } from "@/lib/default-data";
+import {
+  defaultAwards,
+  defaultProjects,
+  defaultSiteContent,
+  defaultSkills,
+  stellarContributionProjectNames,
+} from "@/lib/default-data";
 import { collections, getDb } from "@/lib/db";
 import { resolveProjectFromGitHub } from "@/lib/github";
 import { serializeMongo } from "@/lib/serializers";
@@ -26,6 +32,28 @@ function stripId<T extends { _id?: unknown }>(doc: T): Omit<T, "_id"> {
   const clone = { ...doc };
   delete (clone as { _id?: unknown })._id;
   return clone;
+}
+
+function normalizeName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getLegacyCoverageScore(projects: ProjectDoc[]) {
+  if (!projects.length) return 0;
+  const current = new Set(projects.map((project) => normalizeName(project.name)));
+  const legacy = defaultProjects.map((project) => normalizeName(project.name));
+  const hits = legacy.filter((name) => current.has(name)).length;
+  return hits / legacy.length;
+}
+
+function enforceStellarProjectList(content: SiteContentDoc) {
+  return {
+    ...content,
+    stellarSection: {
+      ...content.stellarSection,
+      projectNames: stellarContributionProjectNames,
+    },
+  };
 }
 
 type ResolvedMetadata = Awaited<ReturnType<typeof resolveProjectFromGitHub>>;
@@ -73,6 +101,28 @@ export async function ensureSeedData() {
         updatedAt: new Date(),
       })),
     );
+  } else {
+    const existingProjectsRaw = await db
+      .collection(collections.projects)
+      .find({})
+      .sort({ order: 1 })
+      .toArray();
+    const existingProjects = (serializeMongo(existingProjectsRaw) as unknown as ProjectDoc[]).map(
+      applyProjectOverrides,
+    );
+    const legacyCoverage = getLegacyCoverageScore(existingProjects);
+    const hasImageData = existingProjects.some((project) => !!(project.imageId || project.heroImageUrl));
+
+    // User requested restoring the former image-backed project list.
+    if (legacyCoverage < 0.6 || !hasImageData) {
+      await db.collection(collections.projects).deleteMany({});
+      await db.collection(collections.projects).insertMany(
+        defaultProjects.map((project) => ({
+          ...stripId(project),
+          updatedAt: new Date(),
+        })),
+      );
+    }
   }
 
   const awardCount = await db.collection(collections.awards).countDocuments();
@@ -125,15 +175,22 @@ export async function getPortfolioData(): Promise<PortfolioData> {
       db.collection(collections.awards).find({}).sort({ order: 1 }).toArray(),
     ]);
 
-    const content = (serializeMongo(contentRaw) || defaultSiteContent) as unknown as SiteContentDoc;
+    const content = enforceStellarProjectList(
+      (serializeMongo(contentRaw) || defaultSiteContent) as unknown as SiteContentDoc,
+    );
     const skills = (serializeMongo(skillsRaw) || defaultSkills) as unknown as SkillDoc[];
     const projectsSerialized = (serializeMongo(projectsRaw) || defaultProjects) as unknown as ProjectDoc[];
     const awards = (serializeMongo(awardsRaw) || defaultAwards) as unknown as AwardDoc[];
 
+    const hydratedProjects = projectsSerialized.map(applyProjectOverrides);
+    const coverage = getLegacyCoverageScore(hydratedProjects);
+    const hasImageData = hydratedProjects.some((project) => !!(project.imageId || project.heroImageUrl));
+    const shouldUseLegacyList = coverage < 0.6 || !hasImageData;
+
     return {
       content,
       skills,
-      projects: projectsSerialized.map(applyProjectOverrides),
+      projects: shouldUseLegacyList ? defaultProjects.map(applyProjectOverrides) : hydratedProjects,
       awards,
     };
   } catch {
@@ -150,7 +207,9 @@ export async function getSiteContent() {
   await ensureSeedData();
   const db = await getDb();
   const doc = await db.collection(collections.siteContent).findOne({ singletonKey: "main" });
-  return (serializeMongo(doc) || defaultSiteContent) as unknown as SiteContentDoc;
+  return enforceStellarProjectList(
+    (serializeMongo(doc) || defaultSiteContent) as unknown as SiteContentDoc,
+  );
 }
 
 export async function updateSiteContent(payload: Partial<SiteContentDoc>) {

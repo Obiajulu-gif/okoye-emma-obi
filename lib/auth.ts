@@ -6,13 +6,27 @@ export interface AdminSessionPayload extends JWTPayload {
   email: string;
 }
 
+let warnedAboutDevSecret = false;
+
 function getSecretKey() {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 24) {
+  const configuredSecret = process.env.SESSION_SECRET?.trim();
+
+  if (configuredSecret && configuredSecret.length >= 24) {
+    return new TextEncoder().encode(configuredSecret);
+  }
+
+  if (process.env.NODE_ENV === "production") {
     throw new Error("SESSION_SECRET must be set and at least 24 characters long");
   }
 
-  return new TextEncoder().encode(secret);
+  if (!warnedAboutDevSecret) {
+    warnedAboutDevSecret = true;
+    console.warn(
+      "SESSION_SECRET is missing/short. Using an insecure development fallback secret.",
+    );
+  }
+
+  return new TextEncoder().encode("dev-only-session-secret-change-me-now");
 }
 
 export async function signAdminSession(email: string) {

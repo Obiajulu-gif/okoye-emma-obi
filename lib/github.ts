@@ -503,7 +503,7 @@ export async function resolveProjectFromGitHub(
 async function fetchAllOwnerRepos(username: string) {
   const repos: Array<{ stargazers_count: number }> = [];
 
-  for (let page = 1; page <= 5; page += 1) {
+  for (let page = 1; page <= 10; page += 1) {
     const pageData = await githubFetch<Array<{ stargazers_count: number }>>(
       `${GITHUB_API}/users/${username}/repos?per_page=100&page=${page}&type=owner&sort=updated`,
     );
@@ -522,6 +522,49 @@ function isoDaysAgo(days: number) {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return date.toISOString();
+}
+
+function parseNumber(value: string | undefined) {
+  if (!value) return 0;
+  const digits = value.replace(/[^\d]/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+async function fetchContributionsLastYear(username: string) {
+  try {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 365);
+
+    const url = `https://github.com/users/${username}/contributions?from=${from
+      .toISOString()
+      .slice(0, 10)}&to=${to.toISOString().slice(0, 10)}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "okoye-emma-obi-portfolio",
+      },
+      next: { revalidate: DEFAULT_REVALIDATE },
+    });
+
+    if (!response.ok) {
+      return 0;
+    }
+
+    const body = await response.text();
+    const exactMatch = body.match(/([\d,]+)\s+contributions?\s+in\s+the\s+last\s+year/i);
+    if (exactMatch?.[1]) {
+      return parseNumber(exactMatch[1]);
+    }
+
+    const titleMatch = body.match(/data-level="\d"[^>]*>\s*<title>\s*([\d,]+)\s+contributions?/i);
+    if (titleMatch?.[1]) {
+      return parseNumber(titleMatch[1]);
+    }
+
+    return 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function fetchGitHubCredibility(
@@ -642,9 +685,25 @@ export async function fetchGitHubCredibility(
     const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
     const withinYear = events.filter((event) => new Date(event.created_at).getTime() >= oneYearAgo);
 
-    const approxCommits = withinYear
+    const pushCommitCount = withinYear
       .filter((event) => event.type === "PushEvent")
       .reduce((sum, event) => sum + (event.payload?.size || 1), 0);
+
+    const contributionsLastYear = await fetchContributionsLastYear(username);
+
+    const oldestTrackedEvent = withinYear.length
+      ? new Date(withinYear[withinYear.length - 1].created_at).getTime()
+      : 0;
+    const coverageDays = oldestTrackedEvent
+      ? Math.max(1, Math.round((Date.now() - oldestTrackedEvent) / (1000 * 60 * 60 * 24)))
+      : 0;
+
+    const estimatedFromContributions = contributionsLastYear
+      ? Math.round(contributionsLastYear * 0.55)
+      : 0;
+    const approxCommits = coverageDays >= 300
+      ? pushCommitCount
+      : Math.max(pushCommitCount, estimatedFromContributions);
 
     const merged = await githubFetch<{ total_count: number }>(
       `${GITHUB_API}/search/issues?q=${encodeURIComponent(
@@ -661,6 +720,7 @@ export async function fetchGitHubCredibility(
       totalStars,
       approxCommitsLastYear: approxCommits,
       mergedPrsLastYear: merged.total_count,
+      contributionsLastYear,
       activitySummary: {
         pushEvents: withinYear.filter((event) => event.type === "PushEvent").length,
         pullRequests: withinYear.filter((event) => event.type === "PullRequestEvent").length,

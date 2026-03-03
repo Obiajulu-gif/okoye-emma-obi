@@ -28,6 +28,9 @@ SESSION_SECRET=long_random_secret_min_24_chars
 
 # Optional, enables richer GraphQL stats and better rate limits
 GITHUB_TOKEN=ghp_xxx
+
+# Optional local-dev fallback if you don't want to hash yet
+# ADMIN_PASSWORD=plain_text_dev_password
 ```
 
 ### Generate `ADMIN_PASSWORD_HASH`

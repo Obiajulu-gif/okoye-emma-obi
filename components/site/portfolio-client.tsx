@@ -139,7 +139,7 @@ export function PortfolioClient({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const featuredProjects = useMemo(
-    () => data.projects.filter((project) => project.featured).slice(0, 9),
+    () => data.projects.filter((project) => project.featured),
     [data.projects],
   );
 

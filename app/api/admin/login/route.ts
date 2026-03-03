@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { ADMIN_SESSION_COOKIE, adminCookieOptions, signAdminSession } from "@/lib/auth";
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid credentials" }, { status: 400 });
     }
 
-    const forwarded = request.headers.get("x-forwarded-for");
+    const forwarded = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip");
     const key = getClientKey(forwarded);
 
     try {
@@ -34,23 +35,34 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const passwordHash = process.env.ADMIN_PASSWORD_HASH;
+    const adminEmail = process.env.ADMIN_EMAIL?.trim();
+    const passwordHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+    const adminPassword = process.env.ADMIN_PASSWORD?.trim();
 
-    if (!adminEmail || !passwordHash) {
+    if (!adminEmail || (!passwordHash && !adminPassword)) {
       return Response.json(
         { error: "Admin credentials are not configured" },
         { status: 500 },
       );
     }
 
-    const { email, password } = parsed.data;
-    const emailMatches = email.toLowerCase() === adminEmail.toLowerCase();
+    const email = parsed.data.email.trim().toLowerCase();
+    const password = parsed.data.password;
+    const emailMatches = email === adminEmail.toLowerCase();
 
-    const isBcryptHash = /^\$2[aby]\$/.test(passwordHash);
-    const passwordMatches = isBcryptHash
-      ? await bcrypt.compare(password, passwordHash)
-      : password === passwordHash;
+    let passwordMatches = false;
+    const candidateSecret = passwordHash || adminPassword || "";
+    const isBcryptHash = /^\$2[aby]\$/.test(candidateSecret);
+
+    if (isBcryptHash) {
+      try {
+        passwordMatches = await bcrypt.compare(password, candidateSecret);
+      } catch {
+        passwordMatches = false;
+      }
+    } else {
+      passwordMatches = password === candidateSecret;
+    }
 
     if (!emailMatches || !passwordMatches) {
       return Response.json({ error: "Invalid credentials" }, { status: 401 });
@@ -58,12 +70,9 @@ export async function POST(request: Request) {
 
     clearLoginRateLimit(key);
 
-    const token = await signAdminSession(email);
-    const response = Response.json({ ok: true });
-    response.headers.append(
-      "Set-Cookie",
-      `${ADMIN_SESSION_COOKIE}=${token}; Path=${adminCookieOptions.path}; HttpOnly; SameSite=${adminCookieOptions.sameSite}; Max-Age=${adminCookieOptions.maxAge};${adminCookieOptions.secure ? " Secure;" : ""}`,
-    );
+    const token = await signAdminSession(adminEmail);
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(ADMIN_SESSION_COOKIE, token, adminCookieOptions);
 
     return response;
   } catch (error) {

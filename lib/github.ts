@@ -570,8 +570,8 @@ async function fetchContributionsLastYear(username: string) {
 export async function fetchGitHubCredibility(
   username = "Obiajulu-gif",
 ): Promise<GitHubCredibilityStats> {
-  try {
-    if (githubToken) {
+  if (githubToken) {
+    try {
       type GraphData = {
         user: {
           followers: { totalCount: number };
@@ -647,90 +647,17 @@ export async function fetchGitHubCredibility(
         source: "graphql",
         updatedAt: new Date().toISOString(),
       };
+    } catch {
+      // Fall back to REST path below.
     }
+  }
 
-    const user = await githubFetch<{
-      public_repos: number;
-      followers: number;
-    }>(`${GITHUB_API}/users/${username}`);
+  const user = await githubFetch<{
+    public_repos: number;
+    followers: number;
+  }>(`${GITHUB_API}/users/${username}`).catch(() => null);
 
-    const repos = await fetchAllOwnerRepos(username);
-    const totalStars = repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0);
-
-    const events: Array<{
-      type: string;
-      created_at: string;
-      payload?: { size?: number };
-    }> = [];
-
-    for (let page = 1; page <= 10; page += 1) {
-      const pageEvents = await githubFetch<Array<{
-        type: string;
-        created_at: string;
-        payload?: { size?: number };
-      }>>(`${GITHUB_API}/users/${username}/events/public?per_page=100&page=${page}`);
-
-      if (!pageEvents.length) {
-        break;
-      }
-
-      events.push(...pageEvents);
-
-      const oldest = pageEvents[pageEvents.length - 1];
-      if (new Date(oldest.created_at).getTime() < Date.now() - 365 * 24 * 60 * 60 * 1000) {
-        break;
-      }
-    }
-
-    const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
-    const withinYear = events.filter((event) => new Date(event.created_at).getTime() >= oneYearAgo);
-
-    const pushCommitCount = withinYear
-      .filter((event) => event.type === "PushEvent")
-      .reduce((sum, event) => sum + (event.payload?.size || 1), 0);
-
-    const contributionsLastYear = await fetchContributionsLastYear(username);
-
-    const oldestTrackedEvent = withinYear.length
-      ? new Date(withinYear[withinYear.length - 1].created_at).getTime()
-      : 0;
-    const coverageDays = oldestTrackedEvent
-      ? Math.max(1, Math.round((Date.now() - oldestTrackedEvent) / (1000 * 60 * 60 * 24)))
-      : 0;
-
-    const estimatedFromContributions = contributionsLastYear
-      ? Math.round(contributionsLastYear * 0.55)
-      : 0;
-    const approxCommits = coverageDays >= 300
-      ? pushCommitCount
-      : Math.max(pushCommitCount, estimatedFromContributions);
-
-    const merged = await githubFetch<{ total_count: number }>(
-      `${GITHUB_API}/search/issues?q=${encodeURIComponent(
-        `type:pr author:${username} is:merged merged:>=${new Date(oneYearAgo)
-          .toISOString()
-          .slice(0, 10)}`,
-      )}&per_page=1`,
-    );
-
-    return {
-      username,
-      publicRepos: user.public_repos,
-      followers: user.followers,
-      totalStars,
-      approxCommitsLastYear: approxCommits,
-      mergedPrsLastYear: merged.total_count,
-      contributionsLastYear,
-      activitySummary: {
-        pushEvents: withinYear.filter((event) => event.type === "PushEvent").length,
-        pullRequests: withinYear.filter((event) => event.type === "PullRequestEvent").length,
-        issues: withinYear.filter((event) => event.type === "IssuesEvent").length,
-        starsGiven: withinYear.filter((event) => event.type === "WatchEvent").length,
-      },
-      source: "rest",
-      updatedAt: new Date().toISOString(),
-    };
-  } catch {
+  if (!user) {
     return {
       username,
       publicRepos: 0,
@@ -748,4 +675,83 @@ export async function fetchGitHubCredibility(
       updatedAt: new Date().toISOString(),
     };
   }
+
+  const repos = await fetchAllOwnerRepos(username).catch(() => []);
+  const totalStars = repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0);
+
+  const events: Array<{
+    type: string;
+    created_at: string;
+    payload?: { size?: number };
+  }> = [];
+
+  for (let page = 1; page <= 10; page += 1) {
+    const pageEvents = await githubFetch<Array<{
+      type: string;
+      created_at: string;
+      payload?: { size?: number };
+    }>>(`${GITHUB_API}/users/${username}/events/public?per_page=100&page=${page}`).catch(
+      () => [],
+    );
+
+    if (!pageEvents.length) {
+      break;
+    }
+
+    events.push(...pageEvents);
+
+    const oldest = pageEvents[pageEvents.length - 1];
+    if (new Date(oldest.created_at).getTime() < Date.now() - 365 * 24 * 60 * 60 * 1000) {
+      break;
+    }
+  }
+
+  const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+  const withinYear = events.filter((event) => new Date(event.created_at).getTime() >= oneYearAgo);
+
+  const pushCommitCount = withinYear
+    .filter((event) => event.type === "PushEvent")
+    .reduce((sum, event) => sum + (event.payload?.size || 1), 0);
+
+  const contributionsLastYear = await fetchContributionsLastYear(username);
+
+  const oldestTrackedEvent = withinYear.length
+    ? new Date(withinYear[withinYear.length - 1].created_at).getTime()
+    : 0;
+  const coverageDays = oldestTrackedEvent
+    ? Math.max(1, Math.round((Date.now() - oldestTrackedEvent) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  const estimatedFromContributions = contributionsLastYear
+    ? Math.round(contributionsLastYear * 0.55)
+    : 0;
+  const approxCommits = coverageDays >= 300
+    ? pushCommitCount
+    : Math.max(pushCommitCount, estimatedFromContributions);
+
+  const merged = await githubFetch<{ total_count: number }>(
+    `${GITHUB_API}/search/issues?q=${encodeURIComponent(
+      `type:pr author:${username} is:merged merged:>=${new Date(oneYearAgo)
+        .toISOString()
+        .slice(0, 10)}`,
+    )}&per_page=1`,
+  ).catch(() => ({ total_count: 0 }));
+
+  return {
+    username,
+    publicRepos: user.public_repos,
+    followers: user.followers,
+    totalStars,
+    approxCommitsLastYear: approxCommits,
+    mergedPrsLastYear: merged.total_count,
+    contributionsLastYear,
+    activitySummary: {
+      pushEvents: withinYear.filter((event) => event.type === "PushEvent").length,
+      pullRequests: withinYear.filter((event) => event.type === "PullRequestEvent").length,
+      issues: withinYear.filter((event) => event.type === "IssuesEvent").length,
+      starsGiven: withinYear.filter((event) => event.type === "WatchEvent").length,
+    },
+    source: "rest",
+    updatedAt: new Date().toISOString(),
+  };
 }

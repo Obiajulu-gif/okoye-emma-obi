@@ -10,6 +10,25 @@ const schema = z.object({
   password: z.string().min(8),
 });
 
+function normalizeEnvValue(value: string | undefined) {
+  if (!value) return "";
+  const trimmed = value.trim();
+
+  if (
+    (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+    (trimmed.startsWith("`") && trimmed.endsWith("`"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  if (trimmed.startsWith("(") && trimmed.endsWith(")")) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -35,9 +54,9 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL?.trim();
-    const passwordHash = process.env.ADMIN_PASSWORD_HASH?.trim();
-    const adminPassword = process.env.ADMIN_PASSWORD?.trim();
+    const adminEmail = normalizeEnvValue(process.env.ADMIN_EMAIL);
+    const passwordHash = normalizeEnvValue(process.env.ADMIN_PASSWORD_HASH);
+    const adminPassword = normalizeEnvValue(process.env.ADMIN_PASSWORD);
 
     if (!adminEmail || (!passwordHash && !adminPassword)) {
       return Response.json(

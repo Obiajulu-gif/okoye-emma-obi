@@ -126,6 +126,50 @@ function mediaUrl(id?: string) {
   return id ? `/api/media/${id}` : "/placeholder.svg";
 }
 
+function ImageSelect({
+  id,
+  label,
+  value,
+  onChange,
+  images,
+}: {
+  id: string;
+  label: string;
+  value?: string;
+  onChange: (value: string) => void;
+  images: ImageDoc[];
+}) {
+  const selected = images.find((image) => image._id === value);
+
+  return (
+    <div className="grid gap-2">
+      <label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value || ""}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+      >
+        <option value="">No image selected</option>
+        {images.map((image) => (
+          <option key={image._id || image.fileId} value={image._id || ""}>
+            {image.filename}
+          </option>
+        ))}
+      </select>
+      {selected?._id ? (
+        <img
+          src={mediaUrl(selected._id)}
+          alt={selected.alt || selected.filename}
+          className="h-24 w-24 rounded-md border border-border object-cover"
+        />
+      ) : null}
+    </div>
+  );
+}
+
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
@@ -147,6 +191,7 @@ export function AdminDashboardClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [savingContent, setSavingContent] = useState(false);
+  const [syncingProjects, setSyncingProjects] = useState(false);
   const [skills, setSkills] = useState<SkillDoc[]>([]);
   const [projects, setProjects] = useState<ProjectDoc[]>([]);
   const [awards, setAwards] = useState<AwardDoc[]>([]);
@@ -244,6 +289,21 @@ export function AdminDashboardClient() {
     [awards, selectedAwardId],
   );
 
+  const sortedImages = useMemo(
+    () => [...images].sort((a, b) => (a.filename || "").localeCompare(b.filename || "")),
+    [images],
+  );
+
+  const mergeResolvedProjects = (updated: ProjectDoc[]) => {
+    if (!updated.length) return;
+    const updatedById = new Map(updated.map((project) => [project._id, project]));
+    setProjects((prev) =>
+      prev
+        .map((project) => updatedById.get(project._id) || project)
+        .sort((a, b) => a.order - b.order),
+    );
+  };
+
   async function loadAll() {
     setLoading(true);
     try {
@@ -264,6 +324,31 @@ export function AdminDashboardClient() {
       if (skillsData[0]?._id) setSelectedSkillId(skillsData[0]._id);
       if (projectsData[0]?._id) setSelectedProjectId(projectsData[0]._id);
       if (awardsData[0]?._id) setSelectedAwardId(awardsData[0]._id);
+
+      const unresolvedCount = projectsData.filter(
+        (project) => project.needsRepo || !project.autoMetadata?.fetchedAt,
+      ).length;
+
+      if (unresolvedCount > 0) {
+        setSyncingProjects(true);
+        void apiFetch<{ updatedCount: number; updated: ProjectDoc[] }>(
+          "/api/admin/projects/resolve-missing",
+          {
+            method: "POST",
+            body: JSON.stringify({ limit: 50 }),
+          },
+        )
+          .then((response) => {
+            mergeResolvedProjects(response.updated);
+            if (response.updatedCount > 0) {
+              toast.success(`Auto-resolved metadata for ${response.updatedCount} projects.`);
+            }
+          })
+          .catch(() => {
+            // Keep dashboard usable even when GitHub metadata fetch fails.
+          })
+          .finally(() => setSyncingProjects(false));
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to load admin data";
       toast.error(message);
@@ -535,6 +620,33 @@ export function AdminDashboardClient() {
     }
   };
 
+  const handleResolveMissingProjects = async () => {
+    setSyncingProjects(true);
+    try {
+      const response = await apiFetch<{ updatedCount: number; updated: ProjectDoc[] }>(
+        "/api/admin/projects/resolve-missing",
+        {
+          method: "POST",
+          body: JSON.stringify({ limit: 50 }),
+        },
+      );
+
+      if (response.updatedCount > 0) {
+        mergeResolvedProjects(response.updated);
+      }
+
+      toast.success(
+        response.updatedCount
+          ? `Resolved metadata for ${response.updatedCount} project(s).`
+          : "No unresolved projects found.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to resolve missing metadata");
+    } finally {
+      setSyncingProjects(false);
+    }
+  };
+
   const handleDeleteProject = async () => {
     if (!selectedProjectId) return;
 
@@ -697,7 +809,13 @@ export function AdminDashboardClient() {
                   <Input placeholder="Secondary CTA Label" {...contentForm.register("secondaryCtaLabel")} />
                   <Input placeholder="Secondary CTA URL" {...contentForm.register("secondaryCtaUrl")} />
                 </div>
-                <Input placeholder="Hero image ID (GridFS metadata id)" {...contentForm.register("heroImageId")} />
+                <ImageSelect
+                  id="hero-image-id"
+                  label="Hero image"
+                  value={contentForm.watch("heroImageId")}
+                  onChange={(value) => contentForm.setValue("heroImageId", value)}
+                  images={sortedImages}
+                />
                 <div className="grid gap-4 md:grid-cols-3">
                   <Input placeholder="About title" {...contentForm.register("aboutTitle")} />
                   <Input placeholder="Contact email" {...contentForm.register("contactEmail")} />
@@ -815,7 +933,13 @@ export function AdminDashboardClient() {
                 <Textarea placeholder="Manual description" {...createProjectForm.register("overrideDescription")} />
                 <Input placeholder="Manual tags CSV" {...createProjectForm.register("overrideTagsCsv")} />
                 <Input placeholder="Manual demo/homepage" {...createProjectForm.register("overrideHomepage")} />
-                <Input placeholder="Manual hero image ID" {...createProjectForm.register("overrideHeroImageId")} />
+                <ImageSelect
+                  id="create-project-image-id"
+                  label="Manual hero image"
+                  value={createProjectForm.watch("overrideHeroImageId")}
+                  onChange={(value) => createProjectForm.setValue("overrideHeroImageId", value)}
+                  images={sortedImages}
+                />
                 <Button type="submit">Add project</Button>
               </form>
               <div className="mt-4 max-h-72 space-y-2 overflow-auto">
@@ -851,7 +975,13 @@ export function AdminDashboardClient() {
                 <Textarea placeholder="Override description" {...editProjectForm.register("overrideDescription")} />
                 <Input placeholder="Override tags CSV" {...editProjectForm.register("overrideTagsCsv")} />
                 <Input placeholder="Override homepage" {...editProjectForm.register("overrideHomepage")} />
-                <Input placeholder="Override hero image ID" {...editProjectForm.register("overrideHeroImageId")} />
+                <ImageSelect
+                  id="edit-project-image-id"
+                  label="Override hero image"
+                  value={editProjectForm.watch("overrideHeroImageId")}
+                  onChange={(value) => editProjectForm.setValue("overrideHeroImageId", value)}
+                  images={sortedImages}
+                />
                 {selectedProject ? (
                   <div className="rounded border border-border p-3 text-xs text-muted-foreground">
                     <p className="font-semibold text-foreground">Auto-fetched metadata</p>
@@ -865,6 +995,15 @@ export function AdminDashboardClient() {
                   <Button type="submit">Save project</Button>
                   <Button type="button" variant="outline" onClick={handleRefetchProject}>
                     Re-fetch from GitHub
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={syncingProjects}
+                    onClick={handleResolveMissingProjects}
+                  >
+                    {syncingProjects ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Resolve missing metadata
                   </Button>
                   <Button type="button" variant="destructive" onClick={handleDeleteProject}>
                     <Trash2 className="mr-2 h-4 w-4" />
@@ -891,7 +1030,13 @@ export function AdminDashboardClient() {
                 </div>
                 <Input placeholder="Placement" {...createAwardForm.register("placement")} />
                 <Input placeholder="Proof URL (LinkedIn/public)" {...createAwardForm.register("proofUrl")} />
-                <Input placeholder="Image ID (optional)" {...createAwardForm.register("imageId")} />
+                <ImageSelect
+                  id="create-award-image-id"
+                  label="Award image (optional)"
+                  value={createAwardForm.watch("imageId")}
+                  onChange={(value) => createAwardForm.setValue("imageId", value)}
+                  images={sortedImages}
+                />
                 <Button type="submit">Add award</Button>
               </form>
 
@@ -926,7 +1071,13 @@ export function AdminDashboardClient() {
                 </div>
                 <Input placeholder="Placement" {...editAwardForm.register("placement")} />
                 <Input placeholder="Proof URL" {...editAwardForm.register("proofUrl")} />
-                <Input placeholder="Image ID" {...editAwardForm.register("imageId")} />
+                <ImageSelect
+                  id="edit-award-image-id"
+                  label="Award image"
+                  value={editAwardForm.watch("imageId")}
+                  onChange={(value) => editAwardForm.setValue("imageId", value)}
+                  images={sortedImages}
+                />
                 <div className="flex flex-wrap gap-2">
                   <Button type="submit">Save award</Button>
                   <Button type="button" variant="destructive" onClick={handleDeleteAward}>

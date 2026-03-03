@@ -54,8 +54,9 @@ Open:
 - `Content`: hero/about/socials/contact/stellar section + experience/education JSON editing
 - `Skills`: add/edit/delete/reorder skill entries
 - `Projects`: add/edit/delete/reorder projects, manual overrides, and per-project **Re-fetch from GitHub**
+- `Projects`: includes automatic missing-metadata resolution and a bulk **Resolve missing metadata** action
 - `Awards`: add/edit/delete/reorder awards, proof links, optional image attachment
-- `Media`: upload images to GridFS and reuse image IDs in content/projects/awards
+- `Media`: upload images to GridFS and select uploaded images directly in Content/Projects/Awards forms
 
 No Admin link is rendered in the public UI.
 

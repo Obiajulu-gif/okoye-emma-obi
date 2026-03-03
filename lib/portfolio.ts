@@ -28,6 +28,22 @@ function stripId<T extends { _id?: unknown }>(doc: T): Omit<T, "_id"> {
   return clone;
 }
 
+type ResolvedMetadata = Awaited<ReturnType<typeof resolveProjectFromGitHub>>;
+
+function buildResolvedProjectUpdate(project: Partial<ProjectDoc>, metadata: ResolvedMetadata) {
+  return {
+    autoMetadata: metadata.autoMetadata,
+    githubUrl: metadata.autoMetadata.githubUrl || project.githubUrl || "",
+    description: metadata.autoMetadata.description || project.description || "",
+    tags: metadata.autoMetadata.tags || project.tags || [],
+    languages: metadata.autoMetadata.languages || project.languages || [],
+    homepage: metadata.autoMetadata.homepage || project.homepage || "",
+    heroImageUrl: metadata.autoMetadata.heroImageUrl || project.heroImageUrl || "",
+    needsRepo: metadata.needsRepo,
+    needsImage: metadata.needsImage,
+  };
+}
+
 export async function ensureSeedData() {
   const db = await getDb();
 
@@ -211,12 +227,38 @@ export async function listProjects() {
 
 export async function createProject(payload: Omit<ProjectDoc, "_id" | "updatedAt">) {
   const db = await getDb();
-  const doc = {
+  const doc: Omit<ProjectDoc, "_id"> = {
     ...payload,
     tags: payload.tags || [],
     languages: payload.languages || [],
-    updatedAt: new Date(),
+    githubUrl: payload.githubUrl || "",
+    description: payload.description || "",
+    homepage: payload.homepage || "",
+    heroImageUrl: payload.heroImageUrl || "",
+    needsRepo: payload.needsRepo ?? true,
+    needsImage: payload.needsImage ?? true,
+    updatedAt: new Date().toISOString(),
   };
+
+  try {
+    const metadata = await resolveProjectFromGitHub(payload.name, "Obiajulu-gif");
+    const resolved = buildResolvedProjectUpdate(doc, metadata);
+
+    doc.autoMetadata = resolved.autoMetadata;
+    doc.githubUrl = resolved.githubUrl;
+    doc.description = resolved.description;
+    doc.tags = resolved.tags;
+    doc.languages = resolved.languages;
+    doc.homepage = resolved.homepage;
+    doc.heroImageUrl = resolved.heroImageUrl;
+    doc.needsRepo = !!(resolved.needsRepo && !payload.overrides?.githubUrl);
+    doc.needsImage = !!(
+      resolved.needsImage &&
+      !(payload.overrides?.heroImageId || payload.imageId || resolved.heroImageUrl)
+    );
+  } catch {
+    // Keep create non-blocking when GitHub lookup fails.
+  }
 
   const result = await db.collection(collections.projects).insertOne(doc);
   return serializeMongo({ ...doc, _id: result.insertedId }) as unknown as ProjectDoc;
@@ -253,20 +295,13 @@ export async function refetchProjectMetadata(projectId: string, username = "Obia
   }
 
   const metadata = await resolveProjectFromGitHub(project.name, username);
+  const resolved = buildResolvedProjectUpdate(project as unknown as Partial<ProjectDoc>, metadata);
 
   await db.collection(collections.projects).updateOne(
     { _id },
     {
       $set: {
-        autoMetadata: metadata.autoMetadata,
-        githubUrl: metadata.autoMetadata.githubUrl || project.githubUrl || "",
-        description: metadata.autoMetadata.description || project.description || "",
-        tags: metadata.autoMetadata.tags || project.tags || [],
-        languages: metadata.autoMetadata.languages || project.languages || [],
-        homepage: metadata.autoMetadata.homepage || project.homepage || "",
-        heroImageUrl: metadata.autoMetadata.heroImageUrl || project.heroImageUrl || "",
-        needsRepo: metadata.needsRepo,
-        needsImage: metadata.needsImage,
+        ...resolved,
         updatedAt: new Date(),
       },
     },
@@ -274,6 +309,58 @@ export async function refetchProjectMetadata(projectId: string, username = "Obia
 
   const updated = await db.collection(collections.projects).findOne({ _id });
   return applyProjectOverrides(serializeMongo(updated) as unknown as ProjectDoc);
+}
+
+export async function resolveMissingProjectMetadata(limit = 20, username = "Obiajulu-gif") {
+  await ensureSeedData();
+  const db = await getDb();
+
+  const targets = await db
+    .collection(collections.projects)
+    .find({
+      $or: [
+        { autoMetadata: { $exists: false } },
+        { autoMetadata: null },
+        { needsRepo: true },
+        { githubUrl: "" },
+      ],
+    })
+    .sort({ order: 1 })
+    .limit(Math.max(1, Math.min(limit, 100)))
+    .toArray();
+
+  const updatedProjects: ProjectDoc[] = [];
+
+  for (const project of targets) {
+    try {
+      const metadata = await resolveProjectFromGitHub(project.name, username);
+      const resolved = buildResolvedProjectUpdate(project as unknown as Partial<ProjectDoc>, metadata);
+
+      await db.collection(collections.projects).updateOne(
+        { _id: project._id },
+        {
+          $set: {
+            ...resolved,
+            needsRepo: !!(resolved.needsRepo && !project.overrides?.githubUrl),
+            needsImage: !!(
+              resolved.needsImage &&
+              !(project.overrides?.heroImageId || project.imageId || resolved.heroImageUrl)
+            ),
+            updatedAt: new Date(),
+          },
+        },
+      );
+
+      const fresh = await db.collection(collections.projects).findOne({ _id: project._id });
+      if (fresh) {
+        updatedProjects.push(applyProjectOverrides(serializeMongo(fresh) as unknown as ProjectDoc));
+      }
+    } catch {
+      // Continue resolving remaining projects even if one lookup fails.
+    }
+  }
+
+  return updatedProjects;
 }
 
 export async function listAwards() {

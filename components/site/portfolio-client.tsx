@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowRight,
   Award,
   BriefcaseBusiness,
   ExternalLink,
@@ -18,37 +20,74 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { Button } from "@/components/ui/button";
 import { useGsapReveal } from "@/hooks/use-gsap-reveal";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import type { GitHubCredibilityStats, PortfolioData, ProjectDoc } from "@/types/portfolio";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const Hero3DPanel = dynamic(
+  () => import("@/components/site/hero-3d-panel").then((module) => module.Hero3DPanel),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative h-full min-h-[360px] w-full overflow-hidden rounded-[2rem] border border-white/20 bg-[radial-gradient(circle_at_20%_20%,rgba(84,156,223,0.26),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(255,177,102,0.24),transparent_40%),linear-gradient(180deg,#020815_0%,#07111e_60%,#050c16_100%)]">
+        <div className="absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.15),transparent_48%)]" />
+      </div>
+    ),
+  },
+);
 
 const navItems = [
   { id: "about", label: "About" },
   { id: "skills", label: "Skills" },
   { id: "stellar", label: "Stellar OSS" },
   { id: "projects", label: "Projects" },
-  { id: "credibility", label: "GitHub Credibility" },
+  { id: "credibility", label: "GitHub" },
   { id: "experience", label: "Experience" },
   { id: "awards", label: "Awards" },
   { id: "contact", label: "Contact" },
 ];
 
 function getImageUrl(imageId?: string, fallback?: string) {
-  if (imageId) {
-    return `/api/media/${imageId}`;
-  }
+  if (imageId) return `/api/media/${imageId}`;
   return fallback || "/images/emmanuel.png";
+}
+
+function SectionHeading({
+  title,
+  subtitle,
+  accent,
+}: {
+  title: string;
+  subtitle: string;
+  accent?: string;
+}) {
+  return (
+    <div className="mb-12 flex flex-col gap-4">
+      <p className="chip w-fit border-primary/30 bg-primary/10 text-primary">{subtitle}</p>
+      <h2 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+        {title}
+      </h2>
+      {accent ? <p className="max-w-2xl text-base text-muted-foreground">{accent}</p> : null}
+    </div>
+  );
 }
 
 function Reveal({
   children,
   className,
+  y = 34,
 }: {
   children: React.ReactNode;
   className?: string;
+  y?: number;
 }) {
-  const ref = useGsapReveal<HTMLDivElement>();
+  const ref = useGsapReveal<HTMLDivElement>({ y, duration: 0.85, ease: "power3.out" });
   return (
     <div ref={ref} className={className}>
       {children}
@@ -56,72 +95,136 @@ function Reveal({
   );
 }
 
-function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="mb-10 flex flex-col gap-3">
-      <p className="chip w-fit">{subtitle}</p>
-      <h2 className="text-3xl font-semibold sm:text-4xl">{title}</h2>
-    </div>
-  );
-}
+function ProjectCard({ project, reduceMotion }: { project: ProjectDoc; reduceMotion: boolean }) {
+  const cardRef = useRef<HTMLElement | null>(null);
+  const revealRef = useGsapReveal<HTMLElement>({
+    y: 44,
+    duration: 0.95,
+    ease: "power3.out",
+  });
 
-function ProjectCard({ project }: { project: ProjectDoc }) {
-  const title = project.name;
-  const description = project.description || "Project details will be completed in admin.";
-  const repo = project.githubUrl;
+  useEffect(() => {
+    const node = cardRef.current;
+    if (!node || reduceMotion) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        node,
+        { opacity: 0.78, scale: 0.975 },
+        {
+          opacity: 1,
+          scale: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: node,
+            start: "top 92%",
+            end: "top 36%",
+            scrub: true,
+          },
+        },
+      );
+    }, node);
+
+    const rotateXTo = gsap.quickTo(node, "rotateX", { duration: 0.24, ease: "power2.out" });
+    const rotateYTo = gsap.quickTo(node, "rotateY", { duration: 0.24, ease: "power2.out" });
+    const yTo = gsap.quickTo(node, "y", { duration: 0.24, ease: "power2.out" });
+
+    const onMove = (event: MouseEvent) => {
+      const rect = node.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+      rotateXTo(-y * 5.5);
+      rotateYTo(x * 8);
+      yTo(-4);
+    };
+
+    const onLeave = () => {
+      rotateXTo(0);
+      rotateYTo(0);
+      yTo(0);
+    };
+
+    node.addEventListener("mousemove", onMove);
+    node.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      node.removeEventListener("mousemove", onMove);
+      node.removeEventListener("mouseleave", onLeave);
+      ctx.revert();
+    };
+  }, [reduceMotion]);
+
   const imageSrc = getImageUrl(project.imageId, project.heroImageUrl || "/placeholder.svg");
 
   return (
-    <article className="surface-card group relative overflow-hidden p-4 transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="relative mb-4 h-40 overflow-hidden rounded-xl border border-border/60 bg-muted/30">
+    <article
+      ref={(node) => {
+        cardRef.current = node;
+        revealRef.current = node;
+      }}
+      className="project-card surface-card relative flex h-full transform-gpu flex-col overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(8,16,29,0.95)_0%,rgba(10,18,29,0.82)_100%)] p-4 sm:p-5"
+      style={{ transformStyle: "preserve-3d", willChange: reduceMotion ? "auto" : "transform" }}
+    >
+      <div className="relative mb-4 h-44 overflow-hidden rounded-2xl border border-white/10">
         <Image
           src={imageSrc}
-          alt={`${title} preview`}
+          alt={`${project.name} preview`}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+          className="object-cover transition duration-500 group-hover:scale-[1.04]"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
       </div>
-      <div className="mb-3 flex items-start justify-between gap-4">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        {project.featured ? <span className="chip">Featured</span> : null}
+
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <h3 className="text-lg font-semibold text-white">{project.name}</h3>
+        {project.featured ? (
+          <span className="chip border-secondary/30 bg-secondary/15 text-secondary">Featured</span>
+        ) : null}
       </div>
-      <p className="mb-4 text-sm text-muted-foreground">{description}</p>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {(project.tags || []).slice(0, 4).map((tag) => (
-          <span key={`${project._id}-${tag}`} className="chip">
+
+      <p className="mb-4 text-sm leading-relaxed text-slate-300">
+        {project.description || "Project details available in admin content."}
+      </p>
+
+      <div className="mb-5 flex flex-wrap gap-2">
+        {(project.tags || []).slice(0, 3).map((tag) => (
+          <span key={`${project._id}-${tag}`} className="chip border-white/15 bg-white/10 text-slate-200">
             {tag}
           </span>
         ))}
         {(project.languages || []).slice(0, 2).map((lang) => (
-          <span key={`${project._id}-${lang}`} className="chip">
+          <span key={`${project._id}-${lang}`} className="chip border-white/15 bg-white/10 text-slate-200">
             {lang}
           </span>
         ))}
       </div>
-      <div className="mt-auto flex items-center gap-3">
-        {repo ? (
+
+      <div className="mt-auto flex items-center gap-4">
+        {project.githubUrl ? (
           <Link
-            href={repo}
+            href={project.githubUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
             <Github className="h-4 w-4" />
             Source
           </Link>
         ) : (
-          <span className="text-sm text-muted-foreground">Repo pending</span>
+          <span className="text-sm text-slate-400">Repo pending</span>
         )}
+
         {project.homepage ? (
           <Link
             href={project.homepage}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-secondary-foreground hover:underline"
+            className="inline-flex items-center gap-1 text-sm font-medium text-slate-200 hover:underline"
           >
             <ExternalLink className="h-4 w-4" />
-            Demo
+            Live
           </Link>
         ) : null}
       </div>
@@ -136,144 +239,221 @@ export function PortfolioClient({
   data: PortfolioData;
   githubStats: GitHubCredibilityStats;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const reduceMotion = usePrefersReducedMotion();
 
-  const featuredProjects = useMemo(
-    () => data.projects.filter((project) => project.featured),
-    [data.projects],
-  );
+  const [menuOpen, setMenuOpen] = useState(false);
+  const heroRef = useRef<HTMLElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const featuredProjects = useMemo(() => data.projects.filter((project) => project.featured), [data.projects]);
 
   const stellarProjects = useMemo(() => {
-    const lookup = new Map(
-      data.projects.map((project) => [project.name.toLowerCase(), project]),
-    );
+    const lookup = new Map(data.projects.map((project) => [project.name.toLowerCase(), project]));
 
-    return data.content.stellarSection.projectNames.map((name) => {
-      const match = lookup.get(name.toLowerCase());
-      return {
-        name,
-        url: match?.githubUrl || "",
-      };
-    });
+    return data.content.stellarSection.projectNames.map((name) => ({
+      name,
+      url: lookup.get(name.toLowerCase())?.githubUrl || "",
+    }));
   }, [data.content.stellarSection.projectNames, data.projects]);
 
+  useLayoutEffect(() => {
+    if (reduceMotion) return;
+    const root = heroRef.current;
+    if (!root) return;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.from("[data-hero-eyebrow]", { y: 18, opacity: 0, duration: 0.42 })
+        .from("[data-hero-word]", { y: 56, opacity: 0, duration: 0.74, stagger: 0.07 }, "-=0.16")
+        .from("[data-hero-role]", { y: 20, opacity: 0, duration: 0.5, stagger: 0.05 }, "-=0.45")
+        .from("[data-hero-copy]", { y: 24, opacity: 0, duration: 0.6 }, "-=0.45")
+        .from("[data-hero-cta]", { y: 18, opacity: 0, duration: 0.45, stagger: 0.08 }, "-=0.35")
+        .from("[data-hero-canvas]", { scale: 0.93, opacity: 0, duration: 1.2, ease: "power4.out" }, "-=1.0");
+    }, root);
+
+    return () => ctx.revert();
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    const panel = mobileMenuRef.current;
+    if (!panel) return;
+
+    if (reduceMotion) {
+      panel.style.display = menuOpen ? "block" : "none";
+      return;
+    }
+
+    if (menuOpen) {
+      gsap.set(panel, { display: "block" });
+      gsap.fromTo(panel, { autoAlpha: 0, y: -14 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" });
+      gsap.fromTo(
+        panel.querySelectorAll("[data-mobile-item]"),
+        { autoAlpha: 0, y: 10 },
+        { autoAlpha: 1, y: 0, duration: 0.24, stagger: 0.04, delay: 0.06, ease: "power2.out" },
+      );
+    } else {
+      gsap.to(panel, {
+        autoAlpha: 0,
+        y: -10,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: () => {
+          gsap.set(panel, { display: "none" });
+        },
+      });
+    }
+  }, [menuOpen, reduceMotion]);
+
   return (
-    <div className="pb-20">
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-lg">
-        <div className="section-shell flex h-16 items-center justify-between">
-          <Link href="#hero" className="font-display text-lg font-semibold tracking-tight">
+    <div className="relative overflow-x-clip pb-20">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_8%,rgba(72,154,221,0.18),transparent_34%),radial-gradient(circle_at_88%_14%,rgba(252,175,101,0.18),transparent_28%),radial-gradient(circle_at_55%_45%,rgba(50,83,122,0.14),transparent_38%)]" />
+
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050b14]/75 backdrop-blur-xl">
+        <div className="section-shell flex h-[74px] items-center justify-between">
+          <Link href="#hero" className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
             Okoye Emmanuel
           </Link>
-          <nav className="hidden items-center gap-6 lg:flex">
-            {navItems.map((item) => (
-              <Link key={item.id} href={`#${item.id}`} className="text-sm font-medium text-muted-foreground transition hover:text-foreground">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <button
-            aria-label="Toggle mobile menu"
-            onClick={() => setMenuOpen((value) => !value)}
-            className="inline-flex rounded-md p-2 lg:hidden"
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-        {menuOpen ? (
-          <nav className="section-shell grid gap-3 border-t border-border/70 py-4 lg:hidden">
+
+          <nav className="hidden items-center gap-7 lg:flex">
             {navItems.map((item) => (
               <Link
                 key={item.id}
                 href={`#${item.id}`}
-                className="text-sm font-medium"
+                className="text-sm font-medium text-slate-300 transition hover:text-white"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <button
+            aria-label="Toggle navigation"
+            className="inline-flex rounded-lg border border-white/15 p-2 text-slate-200 transition hover:border-white/30 hover:text-white lg:hidden"
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+
+        <div ref={mobileMenuRef} className="hidden border-t border-white/10 bg-[#07101c]/95 lg:hidden">
+          <nav className="section-shell grid gap-3 py-5">
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`#${item.id}`}
+                data-mobile-item
+                className="rounded-lg px-2 py-1 text-sm font-medium text-slate-200 transition hover:bg-white/10"
                 onClick={() => setMenuOpen(false)}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-        ) : null}
+        </div>
       </header>
 
       <main>
-        <section id="hero" className="section-shell grid gap-10 py-16 lg:grid-cols-[1.2fr_0.8fr] lg:py-24">
-          <Reveal>
-            <p className="chip mb-4">{data.content.hero.eyebrow}</p>
-            <h1 className="mb-4 text-4xl font-semibold leading-tight sm:text-5xl">
-              {data.content.hero.name}
+        <section
+          id="hero"
+          ref={heroRef}
+          className="section-shell relative grid gap-12 py-14 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24"
+        >
+          <div className="max-w-2xl">
+            <p data-hero-eyebrow className="mb-6 inline-flex rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              {data.content.hero.eyebrow}
+            </p>
+
+            <h1 className="mb-6 text-4xl font-semibold leading-[1.03] text-white sm:text-5xl lg:text-6xl">
+              {data.content.hero.name.split(" ").map((word, index) => (
+                <span key={`${word}-${index}`} data-hero-word className="mr-[0.28em] inline-block">
+                  {word}
+                </span>
+              ))}
             </h1>
-            <div className="mb-4 flex flex-wrap gap-2">
+
+            <div className="mb-6 flex flex-wrap gap-2">
               {data.content.hero.roles.map((role) => (
-                <span key={role} className="chip">
+                <span
+                  key={role}
+                  data-hero-role
+                  className="chip border-white/20 bg-white/8 text-slate-100"
+                >
                   {role}
                 </span>
               ))}
             </div>
-            <p className="mb-8 max-w-2xl text-base text-muted-foreground sm:text-lg">
+
+            <p data-hero-copy className="mb-8 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
               {data.content.hero.description}
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="rounded-full">
-                <Link href={data.content.hero.primaryCtaUrl}>{data.content.hero.primaryCtaLabel}</Link>
+
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90" data-hero-cta>
+                <Link href={data.content.hero.primaryCtaUrl}>
+                  {data.content.hero.primaryCtaLabel}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-full">
+              <Button asChild variant="outline" size="lg" className="rounded-full border-white/20 bg-white/5 text-slate-100 hover:bg-white/10" data-hero-cta>
                 <Link href={data.content.hero.secondaryCtaUrl}>{data.content.hero.secondaryCtaLabel}</Link>
               </Button>
             </div>
-          </Reveal>
+          </div>
 
+          <div data-hero-canvas className="gradient-stroke rounded-[2rem] p-[1px]">
+            <Hero3DPanel imageSrc={getImageUrl(data.content.hero.heroImageId, data.content.hero.heroImageFallback)} />
+          </div>
+        </section>
+
+        <section id="about" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <div className="gradient-stroke rounded-[2rem] p-[1px]">
-              <div className="surface-card relative h-[420px] overflow-hidden rounded-[2rem]">
-                <Image
-                  src={getImageUrl(data.content.hero.heroImageId, data.content.hero.heroImageFallback)}
-                  alt="Okoye Emmanuel"
-                  fill
-                  priority
-                  className="object-cover object-top"
-                />
-              </div>
+            <SectionHeading
+              title="Engineering products with a studio-level blend of performance, UX, and delivery discipline."
+              subtitle="About"
+            />
+            <div className="surface-card grid gap-7 border-white/10 bg-white/5 p-6 text-slate-200 lg:grid-cols-2 lg:p-9">
+              <p className="text-base leading-relaxed text-slate-300">{data.content.about.summary}</p>
+              <p className="text-base leading-relaxed text-slate-300">{data.content.about.body}</p>
             </div>
           </Reveal>
         </section>
 
-        <section id="about" className="section-shell py-10 lg:py-16">
+        <section id="skills" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="Professional engineering for web and blockchain products" subtitle="About" />
-            <div className="surface-card grid gap-6 p-6 lg:grid-cols-2 lg:p-8">
-              <p className="text-base text-muted-foreground">{data.content.about.summary}</p>
-              <p className="text-base text-muted-foreground">{data.content.about.body}</p>
-            </div>
-          </Reveal>
-        </section>
-
-        <section id="skills" className="section-shell py-10 lg:py-16">
-          <Reveal>
-            <SectionHeading title="Core skill stack" subtitle="Skills" />
+            <SectionHeading
+              title="Core stack I use to ship reliable products."
+              subtitle="Skills"
+            />
           </Reveal>
           <Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {data.skills.map((skill) => (
-                <div key={skill._id || skill.name} className="surface-card p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{skill.category}</p>
-                  <h3 className="mt-2 text-base font-semibold">{skill.name}</h3>
-                  {skill.level ? <p className="mt-1 text-sm text-muted-foreground">{skill.level}</p> : null}
-                </div>
+                <article key={skill._id || skill.name} className="surface-card border-white/10 bg-white/5 p-5">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{skill.category}</p>
+                  <h3 className="mt-2 text-lg font-semibold text-white">{skill.name}</h3>
+                  {skill.level ? <p className="mt-1 text-sm text-slate-400">{skill.level}</p> : null}
+                </article>
               ))}
             </div>
           </Reveal>
         </section>
 
-        <section id="stellar" className="section-shell py-10 lg:py-16">
+        <section id="stellar" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title={data.content.stellarSection.title} subtitle="Stellar / Soroban OSS" />
-            <div className="surface-card p-6 lg:p-8">
-              <p className="mb-3 text-base text-muted-foreground">{data.content.stellarSection.intro}</p>
-              <p className="mb-6 text-base font-medium">{data.content.stellarSection.contribution}</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <SectionHeading
+              title={data.content.stellarSection.title}
+              subtitle="Stellar / Soroban OSS"
+              accent="60+ ecosystem contributions across contracts, APIs, SDKs, and developer tooling."
+            />
+
+            <div className="surface-card border-white/10 bg-white/5 p-6 lg:p-8">
+              <p className="mb-3 text-base leading-relaxed text-slate-300">{data.content.stellarSection.intro}</p>
+              <p className="mb-7 text-base font-medium text-slate-100">{data.content.stellarSection.contribution}</p>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {stellarProjects.map((project) => (
-                  <div key={project.name} className="surface-card border border-border/60 p-4">
-                    <p className="mb-2 font-semibold">{project.name}</p>
+                  <article key={project.name} className="rounded-2xl border border-white/10 bg-[#0a1625]/70 p-4">
+                    <h3 className="mb-2 text-sm font-semibold text-white">{project.name}</h3>
                     {project.url ? (
                       <Link
                         href={project.url}
@@ -282,99 +462,112 @@ export function PortfolioClient({
                         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                       >
                         <Github className="h-4 w-4" />
-                        View repository
+                        Repository
                       </Link>
                     ) : (
-                      <span className="text-sm text-muted-foreground">Repository pending</span>
+                      <span className="text-sm text-slate-400">Repository pending</span>
                     )}
-                  </div>
+                  </article>
                 ))}
               </div>
             </div>
           </Reveal>
         </section>
 
-        <section id="projects" className="section-shell py-10 lg:py-16">
+        <section id="projects" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="Selected projects" subtitle="Projects" />
+            <SectionHeading
+              title="Project work with polished visuals and production constraints."
+              subtitle="Projects"
+              accent="Hover cards for micro-interaction polish. Scroll sequencing emphasizes each row naturally."
+            />
           </Reveal>
-          <Reveal>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {featuredProjects.map((project) => (
-                <ProjectCard key={project._id || project.name} project={project} />
-              ))}
-            </div>
-          </Reveal>
+
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project._id || project.name} project={project} reduceMotion={reduceMotion} />
+            ))}
+          </div>
         </section>
 
-        <section id="credibility" className="section-shell py-10 lg:py-16">
+        <section id="credibility" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="GitHub credibility" subtitle="Signal for clients" />
+            <SectionHeading
+              title="GitHub credibility that clients can evaluate quickly."
+              subtitle="Credibility"
+            />
           </Reveal>
+
           <Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-              <div className="surface-card p-5">
-                <p className="text-xs text-muted-foreground">Public repos</p>
-                <p className="mt-2 flex items-center gap-2 text-2xl font-semibold">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <article className="surface-card border-white/10 bg-white/5 p-5">
+                <p className="text-xs text-slate-400">Public repos</p>
+                <p className="mt-3 flex items-center gap-2 text-2xl font-semibold text-white">
                   <Rocket className="h-5 w-5 text-primary" />
                   {githubStats.publicRepos}
                 </p>
-              </div>
-              <div className="surface-card p-5">
-                <p className="text-xs text-muted-foreground">Followers</p>
-                <p className="mt-2 flex items-center gap-2 text-2xl font-semibold">
+              </article>
+              <article className="surface-card border-white/10 bg-white/5 p-5">
+                <p className="text-xs text-slate-400">Followers</p>
+                <p className="mt-3 flex items-center gap-2 text-2xl font-semibold text-white">
                   <Users className="h-5 w-5 text-primary" />
                   {githubStats.followers}
                 </p>
-              </div>
-              <div className="surface-card p-5">
-                <p className="text-xs text-muted-foreground">Total stars received</p>
-                <p className="mt-2 flex items-center gap-2 text-2xl font-semibold">
+              </article>
+              <article className="surface-card border-white/10 bg-white/5 p-5">
+                <p className="text-xs text-slate-400">Stars received</p>
+                <p className="mt-3 flex items-center gap-2 text-2xl font-semibold text-white">
                   <Star className="h-5 w-5 text-primary" />
                   {githubStats.totalStars}
                 </p>
-              </div>
-              <div className="surface-card p-5">
-                <p className="text-xs text-muted-foreground">Approx commits (365d)</p>
-                <p className="mt-2 flex items-center gap-2 text-2xl font-semibold">
+              </article>
+              <article className="surface-card border-white/10 bg-white/5 p-5">
+                <p className="text-xs text-slate-400">Commits (365d, approx)</p>
+                <p className="mt-3 flex items-center gap-2 text-2xl font-semibold text-white">
                   <LineChart className="h-5 w-5 text-primary" />
                   {githubStats.approxCommitsLastYear}
                 </p>
-              </div>
-              <div className="surface-card p-5">
-                <p className="text-xs text-muted-foreground">Merged PRs (365d)</p>
-                <p className="mt-2 flex items-center gap-2 text-2xl font-semibold">
+              </article>
+              <article className="surface-card border-white/10 bg-white/5 p-5">
+                <p className="text-xs text-slate-400">Merged PRs (365d)</p>
+                <p className="mt-3 flex items-center gap-2 text-2xl font-semibold text-white">
                   <Github className="h-5 w-5 text-primary" />
                   {githubStats.mergedPrsLastYear}
                 </p>
-              </div>
+              </article>
+              <article className="surface-card border-white/10 bg-white/5 p-5">
+                <p className="text-xs text-slate-400">Contributions (365d)</p>
+                <p className="mt-3 flex items-center gap-2 text-2xl font-semibold text-white">
+                  <Github className="h-5 w-5 text-primary" />
+                  {githubStats.contributionsLastYear || "N/A"}
+                </p>
+              </article>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Activity summary (last 365 days): {githubStats.activitySummary.pushEvents} push events, {" "}
+
+            <p className="mt-5 text-sm text-slate-400">
+              Activity summary: {githubStats.activitySummary.pushEvents} push events, {" "}
               {githubStats.activitySummary.pullRequests} PR events, {githubStats.activitySummary.issues} issues, {" "}
-              {githubStats.activitySummary.starsGiven} stars given. Data source: {githubStats.source}.
+              {githubStats.activitySummary.starsGiven} stars given. Source: {githubStats.source}.
             </p>
           </Reveal>
         </section>
 
-        <section id="experience" className="section-shell py-10 lg:py-16">
+        <section id="experience" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading title="Experience timeline" subtitle="Experience" />
-          </Reveal>
-          <Reveal>
             <div className="space-y-4">
               {data.content.experience.map((item) => (
-                <article key={`${item.company}-${item.period}`} className="surface-card p-6">
-                  <div className="mb-3 flex flex-wrap items-center gap-3">
-                    <span className="chip inline-flex items-center gap-1">
-                      <BriefcaseBusiness className="h-3.5 w-3.5" />
+                <article key={`${item.company}-${item.period}`} className="surface-card border-white/10 bg-white/5 p-6">
+                  <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
+                    <span className="chip border-white/20 bg-white/8 text-slate-100">
+                      <BriefcaseBusiness className="mr-1.5 h-3.5 w-3.5" />
                       {item.role}
                     </span>
-                    <span className="chip">{item.period}</span>
-                    <span className="chip">{item.location}</span>
+                    <span className="chip border-white/20 bg-white/8 text-slate-100">{item.period}</span>
+                    <span className="chip border-white/20 bg-white/8 text-slate-100">{item.location}</span>
                   </div>
-                  <h3 className="mb-3 text-xl font-semibold">{item.company}</h3>
-                  <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                  <h3 className="mb-3 text-xl font-semibold text-white">{item.company}</h3>
+                  <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed text-slate-300">
                     {item.highlights.map((highlight) => (
                       <li key={highlight}>{highlight}</li>
                     ))}
@@ -385,49 +578,47 @@ export function PortfolioClient({
           </Reveal>
         </section>
 
-        <section className="section-shell py-10 lg:py-16">
+        <section className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading title="Education" subtitle="Resume" />
-          </Reveal>
-          <Reveal>
             <div className="grid gap-4 lg:grid-cols-3">
               {data.content.education.map((item) => (
-                <article key={`${item.school}-${item.period}`} className="surface-card p-5">
-                  <p className="chip inline-flex items-center gap-1">
-                    <GraduationCap className="h-3.5 w-3.5" />
+                <article key={`${item.school}-${item.period}`} className="surface-card border-white/10 bg-white/5 p-5">
+                  <p className="chip border-white/20 bg-white/8 text-slate-100">
+                    <GraduationCap className="mr-1.5 h-3.5 w-3.5" />
                     {item.period}
                   </p>
-                  <h3 className="mt-3 text-lg font-semibold">{item.degree}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.school}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.details}</p>
+                  <h3 className="mt-3 text-lg font-semibold text-white">{item.degree}</h3>
+                  <p className="mt-2 text-sm text-slate-300">{item.school}</p>
+                  <p className="mt-1 text-sm text-slate-400">{item.details}</p>
                 </article>
               ))}
             </div>
           </Reveal>
         </section>
 
-        <section id="awards" className="section-shell py-10 lg:py-16">
+        <section id="awards" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading title="Awards & recognition" subtitle="Awards" />
           </Reveal>
-          <Reveal>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {data.awards.map((award) => (
-                <article key={award._id || `${award.title}-${award.year}`} className="surface-card flex flex-col p-5">
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {data.awards.map((award) => (
+              <Reveal key={award._id || `${award.title}-${award.year}`} y={26}>
+                <article className="surface-card h-full border-white/10 bg-white/5 p-5">
                   {award.imageId ? (
-                    <div className="relative mb-4 h-40 overflow-hidden rounded-xl border border-border/60">
+                    <div className="relative mb-4 h-40 overflow-hidden rounded-xl border border-white/10">
                       <Image
                         src={getImageUrl(award.imageId, "/placeholder.svg")}
                         alt={award.title}
                         fill
-                        sizes="(max-width: 768px) 100vw, 30vw"
                         className="object-cover"
                       />
                     </div>
                   ) : null}
-                  <p className="chip w-fit">{award.year}</p>
-                  <h3 className="mt-3 text-lg font-semibold">{award.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{award.orgOrEvent}</p>
+                  <p className="chip w-fit border-secondary/30 bg-secondary/15 text-secondary">{award.year}</p>
+                  <h3 className="mt-3 text-lg font-semibold text-white">{award.title}</h3>
+                  <p className="mt-2 text-sm text-slate-300">{award.orgOrEvent}</p>
                   {award.placement ? (
                     <p className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary">
                       <Award className="h-4 w-4" />
@@ -439,27 +630,31 @@ export function PortfolioClient({
                       href={award.proofUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      className="mt-4 inline-flex items-center gap-1 text-sm text-slate-200 hover:underline"
                     >
                       <ExternalLink className="h-4 w-4" />
                       View proof
                     </Link>
                   ) : null}
                 </article>
-              ))}
-            </div>
-          </Reveal>
+              </Reveal>
+            ))}
+          </div>
         </section>
 
-        <section id="contact" className="section-shell py-10 lg:py-16">
+        <section id="contact" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="Let’s build your next product" subtitle="Contact" />
-            <div className="surface-card grid gap-6 p-6 lg:grid-cols-2 lg:p-8">
+            <SectionHeading
+              title="Let’s build a fast, polished, and resilient product together."
+              subtitle="Contact"
+            />
+
+            <div className="surface-card grid gap-6 border-white/10 bg-white/5 p-6 lg:grid-cols-2 lg:p-8">
               <div>
-                <p className="mb-4 text-muted-foreground">
-                  Available for full-time, contract, and consulting roles across full-stack product delivery and blockchain engineering.
+                <p className="mb-4 text-sm leading-relaxed text-slate-300 sm:text-base">
+                  Available for product engineering, frontend architecture, and blockchain-integrated full-stack delivery.
                 </p>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-sm text-slate-200">
                   <p className="inline-flex items-center gap-2">
                     <Mail className="h-4 w-4 text-primary" />
                     <Link href={data.content.socials.email} className="hover:underline">
@@ -472,17 +667,18 @@ export function PortfolioClient({
                   </p>
                 </div>
               </div>
+
               <div className="grid gap-2 text-sm">
-                <Link href={data.content.socials.github} target="_blank" rel="noreferrer" className="chip w-fit hover:bg-muted">
+                <Link href={data.content.socials.github} target="_blank" rel="noreferrer" className="chip w-fit border-white/20 bg-white/8 text-slate-100 hover:bg-white/15">
                   GitHub
                 </Link>
-                <Link href={data.content.socials.linkedin} target="_blank" rel="noreferrer" className="chip w-fit hover:bg-muted">
+                <Link href={data.content.socials.linkedin} target="_blank" rel="noreferrer" className="chip w-fit border-white/20 bg-white/8 text-slate-100 hover:bg-white/15">
                   LinkedIn
                 </Link>
-                <Link href={data.content.socials.x} target="_blank" rel="noreferrer" className="chip w-fit hover:bg-muted">
+                <Link href={data.content.socials.x} target="_blank" rel="noreferrer" className="chip w-fit border-white/20 bg-white/8 text-slate-100 hover:bg-white/15">
                   X
                 </Link>
-                <Link href={data.content.resumeHighlights.resumeUrl} className="chip w-fit hover:bg-muted">
+                <Link href={data.content.resumeHighlights.resumeUrl} className="chip w-fit border-white/20 bg-white/8 text-slate-100 hover:bg-white/15">
                   Download Resume
                 </Link>
               </div>

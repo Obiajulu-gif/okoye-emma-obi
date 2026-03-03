@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
 
+import { RouteTransitionShell } from "@/components/site/route-transition-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -56,7 +57,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${manrope.variable} ${spaceGrotesk.variable} min-h-screen bg-background text-foreground antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <RouteTransitionShell>{children}</RouteTransitionShell>
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>

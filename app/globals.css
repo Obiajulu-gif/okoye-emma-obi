@@ -60,9 +60,9 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans), sans-serif;
     background-image:
-      radial-gradient(circle at 0% 0%, rgba(20, 143, 180, 0.14), transparent 35%),
-      radial-gradient(circle at 100% 15%, rgba(240, 168, 35, 0.15), transparent 28%),
-      radial-gradient(circle at 50% 100%, rgba(16, 96, 130, 0.1), transparent 26%);
+      radial-gradient(circle at 0% 0%, rgba(20, 143, 180, 0.11), transparent 36%),
+      radial-gradient(circle at 100% 15%, rgba(240, 168, 35, 0.11), transparent 28%),
+      linear-gradient(135deg, rgba(11, 21, 34, 0.98) 0%, rgba(12, 23, 37, 0.92) 42%, rgba(8, 17, 29, 0.98) 100%);
     background-attachment: fixed;
   }
 
@@ -90,8 +90,8 @@
 }
 
 @layer components {
-  .section-shell {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+.section-shell {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
   .surface-card {
@@ -104,6 +104,24 @@
 
   .chip {
     @apply inline-flex items-center rounded-full border border-border bg-background/80 px-3 py-1 text-xs font-medium;
+  }
+
+  .project-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    pointer-events: none;
+    background:
+      linear-gradient(130deg, rgba(95, 167, 227, 0.16), transparent 35%),
+      linear-gradient(310deg, rgba(248, 182, 120, 0.1), transparent 40%);
+    opacity: 0.5;
+  }
+
+  .text-glow {
+    text-shadow:
+      0 0 1px rgba(255, 255, 255, 0.24),
+      0 0 24px rgba(98, 184, 245, 0.28);
   }
 }
 

@@ -63,23 +63,25 @@ export const stellarContributionRepoUrls = Object.fromEntries(
 export const defaultSiteContent: SiteContentDoc = {
   singletonKey: "main",
   hero: {
-    eyebrow: "Full-Stack & Blockchain Engineer",
+    eyebrow: "Full-stack and blockchain engineer",
     name: "Okoye Emmanuel Obiajulu",
     roles: [
-      "Full-Stack Engineer",
-      "Stellar / Soroban Contributor",
-      "MERN & Next.js Developer",
+      "Software Developer",
+      "MERN Developer",
+      "Blockchain Developer",
+      "DevOps Engineer",
     ],
     description:
-      "I design and ship production-grade web and blockchain products with strong UX, clean architecture, and measurable business outcomes.",
+      "Crafting exceptional digital experiences with modern web technologies. Specialized in building scalable full-stack applications.",
     primaryCtaLabel: "Hire Me",
-    primaryCtaUrl: "#contact",
-    secondaryCtaLabel: "Download Resume",
+    primaryCtaUrl: "https://wa.me/2349069406647",
+    secondaryCtaLabel: "Resume",
     secondaryCtaUrl: "/resume.pdf",
     heroImageFallback: "/images/emmanuel.png",
   },
   about: {
-    title: "About",
+    label: "About",
+    title: "Engineering products with a studio-level blend of performance, UX, and delivery discipline.",
     summary:
       "Software developer focused on resilient full-stack systems, developer tooling, and Stellar ecosystem products.",
     body:
@@ -93,17 +95,64 @@ export const defaultSiteContent: SiteContentDoc = {
     website: "https://okoye-emma-obi.vercel.app",
   },
   contact: {
+    label: "Contact",
+    title: "Let’s build a fast, polished, and resilient product together.",
+    intro:
+      "Available for product engineering, frontend architecture, and blockchain-integrated full-stack delivery.",
     email: "okoyeemmanuelobiajulu@gmail.com",
     phone: "+2349069406647",
     location: "Anambra, Nigeria",
   },
   stellarSection: {
+    label: "Stellar / Soroban OSS",
     title: "Stellar / Soroban Open Source",
     intro:
       "I actively contribute to Stellar blockchain projects and Soroban tooling.",
     contribution:
       "Contributed to 60+ Stellar ecosystem projects spanning contracts, SDKs, APIs, and developer experience utilities.",
+    accent: "60+ ecosystem contributions across contracts, APIs, SDKs, and developer tooling.",
     projectNames: stellarContributionProjectNames,
+  },
+  presentation: {
+    brandName: "Okoye Emmanuel",
+    navigation: [
+      { id: "about", label: "About" },
+      { id: "skills", label: "Skills" },
+      { id: "stellar", label: "Stellar OSS" },
+      { id: "projects", label: "Projects" },
+      { id: "credibility", label: "GitHub" },
+      { id: "experience", label: "Experience" },
+      { id: "awards", label: "Awards" },
+      { id: "contact", label: "Contact" },
+    ],
+    skills: {
+      label: "Skills",
+      title: "Core stack I use to ship reliable products.",
+      accent:
+        "Visual stack rails for the languages, frameworks, data systems, DevOps tools, and blockchain workflows I use most.",
+    },
+    projects: {
+      label: "Projects",
+      title: "Project work with polished visuals and production constraints.",
+      accent:
+        "Hover cards for micro-interaction polish. Scroll sequencing emphasizes each row naturally.",
+    },
+    credibility: {
+      label: "Credibility",
+      title: "GitHub credibility that clients can evaluate quickly.",
+    },
+    experience: {
+      label: "Experience",
+      title: "Experience timeline",
+    },
+    education: {
+      label: "Resume",
+      title: "Education",
+    },
+    awards: {
+      label: "Awards",
+      title: "Awards & recognition",
+    },
   },
   experience: [
     {

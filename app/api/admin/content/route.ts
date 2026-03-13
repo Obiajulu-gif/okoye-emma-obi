@@ -19,6 +19,17 @@ const educationSchema = z.object({
   details: z.string().min(1),
 });
 
+const navigationItemSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+});
+
+const sectionCopySchema = z.object({
+  label: z.string().min(1),
+  title: z.string().min(1),
+  accent: z.string().optional(),
+});
+
 const schema = z.object({
   hero: z
     .object({
@@ -36,6 +47,7 @@ const schema = z.object({
     .optional(),
   about: z
     .object({
+      label: z.string(),
       title: z.string(),
       summary: z.string(),
       body: z.string(),
@@ -52,6 +64,9 @@ const schema = z.object({
     .optional(),
   contact: z
     .object({
+      label: z.string(),
+      title: z.string(),
+      intro: z.string(),
       email: z.string(),
       phone: z.string(),
       location: z.string(),
@@ -59,10 +74,24 @@ const schema = z.object({
     .optional(),
   stellarSection: z
     .object({
+      label: z.string(),
       title: z.string(),
       intro: z.string(),
       contribution: z.string(),
+      accent: z.string(),
       projectNames: z.array(z.string()),
+    })
+    .optional(),
+  presentation: z
+    .object({
+      brandName: z.string(),
+      navigation: z.array(navigationItemSchema),
+      skills: sectionCopySchema,
+      projects: sectionCopySchema,
+      credibility: sectionCopySchema,
+      experience: sectionCopySchema,
+      education: sectionCopySchema,
+      awards: sectionCopySchema,
     })
     .optional(),
   experience: z.array(experienceSchema).optional(),

@@ -5,7 +5,6 @@ import {
   defaultProjects,
   defaultSiteContent,
   defaultSkills,
-  stellarContributionProjectNames,
 } from "@/lib/default-data";
 import { collections, getDb } from "@/lib/db";
 import { resolveProjectFromGitHub } from "@/lib/github";
@@ -34,25 +33,89 @@ function stripId<T extends { _id?: unknown }>(doc: T): Omit<T, "_id"> {
   return clone;
 }
 
-function normalizeName(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+function mergeStringArray(current: string[] | undefined, fallback: string[]) {
+  return current?.filter(Boolean).length ? current.filter(Boolean) : fallback;
 }
 
-function getLegacyCoverageScore(projects: ProjectDoc[]) {
-  if (!projects.length) return 0;
-  const current = new Set(projects.map((project) => normalizeName(project.name)));
-  const legacy = defaultProjects.map((project) => normalizeName(project.name));
-  const hits = legacy.filter((name) => current.has(name)).length;
-  return hits / legacy.length;
-}
-
-function enforceStellarProjectList(content: SiteContentDoc) {
+function mergeSectionCopy(
+  current: Partial<SiteContentDoc["presentation"]["skills"]> | undefined,
+  fallback: SiteContentDoc["presentation"]["skills"],
+) {
   return {
-    ...content,
-    stellarSection: {
-      ...content.stellarSection,
-      projectNames: stellarContributionProjectNames,
+    ...fallback,
+    ...(current || {}),
+  };
+}
+
+export function normalizeSiteContent(content?: Partial<SiteContentDoc> | null): SiteContentDoc {
+  const current = content || {};
+
+  return {
+    ...defaultSiteContent,
+    ...current,
+    singletonKey: "main",
+    hero: {
+      ...defaultSiteContent.hero,
+      ...(current.hero || {}),
     },
+    about: {
+      ...defaultSiteContent.about,
+      ...(current.about || {}),
+    },
+    socials: {
+      ...defaultSiteContent.socials,
+      ...(current.socials || {}),
+    },
+    contact: {
+      ...defaultSiteContent.contact,
+      ...(current.contact || {}),
+    },
+    stellarSection: {
+      ...defaultSiteContent.stellarSection,
+      ...(current.stellarSection || {}),
+      projectNames: mergeStringArray(
+        current.stellarSection?.projectNames,
+        defaultSiteContent.stellarSection.projectNames,
+      ),
+    },
+    presentation: {
+      brandName: current.presentation?.brandName || defaultSiteContent.presentation.brandName,
+      navigation:
+        current.presentation?.navigation?.length
+          ? current.presentation.navigation
+          : defaultSiteContent.presentation.navigation,
+      skills: mergeSectionCopy(current.presentation?.skills, defaultSiteContent.presentation.skills),
+      projects: mergeSectionCopy(current.presentation?.projects, defaultSiteContent.presentation.projects),
+      credibility: mergeSectionCopy(
+        current.presentation?.credibility,
+        defaultSiteContent.presentation.credibility,
+      ),
+      experience: mergeSectionCopy(
+        current.presentation?.experience,
+        defaultSiteContent.presentation.experience,
+      ),
+      education: mergeSectionCopy(current.presentation?.education, defaultSiteContent.presentation.education),
+      awards: mergeSectionCopy(current.presentation?.awards, defaultSiteContent.presentation.awards),
+    },
+    experience: current.experience?.length ? current.experience : defaultSiteContent.experience,
+    education: current.education?.length ? current.education : defaultSiteContent.education,
+    resumeHighlights: {
+      ...defaultSiteContent.resumeHighlights,
+      ...(current.resumeHighlights || {}),
+      selectedProjects: mergeStringArray(
+        current.resumeHighlights?.selectedProjects,
+        defaultSiteContent.resumeHighlights.selectedProjects,
+      ),
+      awards: mergeStringArray(
+        current.resumeHighlights?.awards,
+        defaultSiteContent.resumeHighlights.awards,
+      ),
+      coreSkills: mergeStringArray(
+        current.resumeHighlights?.coreSkills,
+        defaultSiteContent.resumeHighlights.coreSkills,
+      ),
+    },
+    updatedAt: typeof current.updatedAt === "string" ? current.updatedAt : defaultSiteContent.updatedAt,
   };
 }
 
@@ -101,28 +164,6 @@ export async function ensureSeedData() {
         updatedAt: new Date(),
       })),
     );
-  } else {
-    const existingProjectsRaw = await db
-      .collection(collections.projects)
-      .find({})
-      .sort({ order: 1 })
-      .toArray();
-    const existingProjects = (serializeMongo(existingProjectsRaw) as unknown as ProjectDoc[]).map(
-      applyProjectOverrides,
-    );
-    const legacyCoverage = getLegacyCoverageScore(existingProjects);
-    const hasImageData = existingProjects.some((project) => !!(project.imageId || project.heroImageUrl));
-
-    // User requested restoring the former image-backed project list.
-    if (legacyCoverage < 0.6 || !hasImageData) {
-      await db.collection(collections.projects).deleteMany({});
-      await db.collection(collections.projects).insertMany(
-        defaultProjects.map((project) => ({
-          ...stripId(project),
-          updatedAt: new Date(),
-        })),
-      );
-    }
   }
 
   const awardCount = await db.collection(collections.awards).countDocuments();
@@ -175,27 +216,22 @@ export async function getPortfolioData(): Promise<PortfolioData> {
       db.collection(collections.awards).find({}).sort({ order: 1 }).toArray(),
     ]);
 
-    const content = enforceStellarProjectList(
+    const content = normalizeSiteContent(
       (serializeMongo(contentRaw) || defaultSiteContent) as unknown as SiteContentDoc,
     );
     const skills = (serializeMongo(skillsRaw) || defaultSkills) as unknown as SkillDoc[];
     const projectsSerialized = (serializeMongo(projectsRaw) || defaultProjects) as unknown as ProjectDoc[];
     const awards = (serializeMongo(awardsRaw) || defaultAwards) as unknown as AwardDoc[];
 
-    const hydratedProjects = projectsSerialized.map(applyProjectOverrides);
-    const coverage = getLegacyCoverageScore(hydratedProjects);
-    const hasImageData = hydratedProjects.some((project) => !!(project.imageId || project.heroImageUrl));
-    const shouldUseLegacyList = coverage < 0.6 || !hasImageData;
-
     return {
       content,
       skills,
-      projects: shouldUseLegacyList ? defaultProjects.map(applyProjectOverrides) : hydratedProjects,
+      projects: projectsSerialized.map(applyProjectOverrides),
       awards,
     };
   } catch {
     return {
-      content: defaultSiteContent,
+      content: normalizeSiteContent(defaultSiteContent),
       skills: defaultSkills,
       projects: defaultProjects,
       awards: defaultAwards,
@@ -207,9 +243,7 @@ export async function getSiteContent() {
   await ensureSeedData();
   const db = await getDb();
   const doc = await db.collection(collections.siteContent).findOne({ singletonKey: "main" });
-  return enforceStellarProjectList(
-    (serializeMongo(doc) || defaultSiteContent) as unknown as SiteContentDoc,
-  );
+  return normalizeSiteContent((serializeMongo(doc) || defaultSiteContent) as unknown as SiteContentDoc);
 }
 
 export async function updateSiteContent(payload: Partial<SiteContentDoc>) {
@@ -217,25 +251,116 @@ export async function updateSiteContent(payload: Partial<SiteContentDoc>) {
   const db = await getDb();
 
   const current = await getSiteContent();
-  const nextDoc = {
+  const nextDoc = normalizeSiteContent({
     ...current,
     ...payload,
+    hero: payload.hero ? { ...current.hero, ...payload.hero } : current.hero,
+    about: payload.about ? { ...current.about, ...payload.about } : current.about,
+    socials: payload.socials ? { ...current.socials, ...payload.socials } : current.socials,
+    contact: payload.contact ? { ...current.contact, ...payload.contact } : current.contact,
+    stellarSection: payload.stellarSection
+      ? { ...current.stellarSection, ...payload.stellarSection }
+      : current.stellarSection,
+    presentation: payload.presentation
+      ? {
+          ...current.presentation,
+          ...payload.presentation,
+          skills: payload.presentation.skills
+            ? { ...current.presentation.skills, ...payload.presentation.skills }
+            : current.presentation.skills,
+          projects: payload.presentation.projects
+            ? { ...current.presentation.projects, ...payload.presentation.projects }
+            : current.presentation.projects,
+          credibility: payload.presentation.credibility
+            ? { ...current.presentation.credibility, ...payload.presentation.credibility }
+            : current.presentation.credibility,
+          experience: payload.presentation.experience
+            ? { ...current.presentation.experience, ...payload.presentation.experience }
+            : current.presentation.experience,
+          education: payload.presentation.education
+            ? { ...current.presentation.education, ...payload.presentation.education }
+            : current.presentation.education,
+          awards: payload.presentation.awards
+            ? { ...current.presentation.awards, ...payload.presentation.awards }
+            : current.presentation.awards,
+        }
+      : current.presentation,
     singletonKey: "main",
     updatedAt: now(),
-  };
+  });
 
   await db.collection(collections.siteContent).updateOne(
     { singletonKey: "main" },
     {
       $set: {
-        ...nextDoc,
-        updatedAt: new Date(),
+        ...stripId(nextDoc),
+        updatedAt: new Date(nextDoc.updatedAt),
       },
     },
     { upsert: true },
   );
 
   return nextDoc as unknown as SiteContentDoc;
+}
+
+export async function syncFrontendContentToDatabase() {
+  const db = await getDb();
+  const syncedAt = new Date();
+  const content = normalizeSiteContent({
+    ...defaultSiteContent,
+    updatedAt: syncedAt.toISOString(),
+  });
+
+  await db.collection(collections.siteContent).updateOne(
+    { singletonKey: "main" },
+    {
+      $set: {
+        ...stripId(content),
+        updatedAt: syncedAt,
+      },
+    },
+    { upsert: true },
+  );
+
+  await Promise.all([
+    db.collection(collections.skills).deleteMany({}),
+    db.collection(collections.projects).deleteMany({}),
+    db.collection(collections.awards).deleteMany({}),
+  ]);
+
+  if (defaultSkills.length) {
+    await db.collection(collections.skills).insertMany(
+      defaultSkills.map((skill) => ({
+        ...stripId(skill),
+        updatedAt: syncedAt,
+      })),
+    );
+  }
+
+  if (defaultProjects.length) {
+    await db.collection(collections.projects).insertMany(
+      defaultProjects.map((project) => ({
+        ...stripId(project),
+        updatedAt: syncedAt,
+      })),
+    );
+  }
+
+  if (defaultAwards.length) {
+    await db.collection(collections.awards).insertMany(
+      defaultAwards.map((award) => ({
+        ...stripId(award),
+        updatedAt: syncedAt,
+      })),
+    );
+  }
+
+  return {
+    contentUpdatedAt: syncedAt.toISOString(),
+    skillsCount: defaultSkills.length,
+    projectsCount: defaultProjects.length,
+    awardsCount: defaultAwards.length,
+  };
 }
 
 export async function listSkills() {

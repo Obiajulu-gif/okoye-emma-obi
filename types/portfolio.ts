@@ -20,12 +20,16 @@ export interface HeroContent {
 }
 
 export interface AboutContent {
+  label: string;
   title: string;
   summary: string;
   body: string;
 }
 
 export interface ContactContent {
+  label: string;
+  title: string;
+  intro: string;
   email: string;
   phone: string;
   location: string;
@@ -54,10 +58,34 @@ export interface ResumeHighlights {
 }
 
 export interface StellarSection {
+  label: string;
   title: string;
   intro: string;
   contribution: string;
+  accent: string;
   projectNames: string[];
+}
+
+export interface NavigationItem {
+  id: string;
+  label: string;
+}
+
+export interface SectionCopy {
+  label: string;
+  title: string;
+  accent?: string;
+}
+
+export interface SitePresentation {
+  brandName: string;
+  navigation: NavigationItem[];
+  skills: SectionCopy;
+  projects: SectionCopy;
+  credibility: SectionCopy;
+  experience: SectionCopy;
+  education: SectionCopy;
+  awards: SectionCopy;
 }
 
 export interface SiteContentDoc {
@@ -68,6 +96,7 @@ export interface SiteContentDoc {
   socials: SocialLinks;
   contact: ContactContent;
   stellarSection: StellarSection;
+  presentation: SitePresentation;
   experience: ExperienceItem[];
   education: EducationItem[];
   resumeHighlights: ResumeHighlights;

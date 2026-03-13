@@ -47,17 +47,6 @@ import type { GitHubCredibilityStats, PortfolioData, ProjectDoc } from "@/types/
 
 gsap.registerPlugin(ScrollTrigger);
 
-const navItems = [
-  { id: "about", label: "About" },
-  { id: "skills", label: "Skills" },
-  { id: "stellar", label: "Stellar OSS" },
-  { id: "projects", label: "Projects" },
-  { id: "credibility", label: "GitHub" },
-  { id: "experience", label: "Experience" },
-  { id: "awards", label: "Awards" },
-  { id: "contact", label: "Contact" },
-];
-
 const curatedProjectStacks: Record<string, string[]> = {
   Reapvest: ["React", "JavaScript", "MongoDB"],
   ChainMove: ["Next.js", "Node.js", "MongoDB"],
@@ -511,6 +500,7 @@ export function PortfolioClient({
   githubStats: GitHubCredibilityStats;
 }) {
   const reduceMotion = usePrefersReducedMotion();
+  const navItems = data.content.presentation.navigation;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
@@ -569,7 +559,7 @@ export function PortfolioClient({
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050b14]/75 backdrop-blur-xl">
         <div className="section-shell flex h-[74px] items-center justify-between">
           <Link href="#hero" className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
-            Okoye Emmanuel
+            {data.content.presentation.brandName}
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex">
@@ -611,13 +601,13 @@ export function PortfolioClient({
       </header>
 
       <main>
-        <Hero />
+        <Hero content={data.content} />
 
         <section id="about" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading
-              title="Engineering products with a studio-level blend of performance, UX, and delivery discipline."
-              subtitle="About"
+              title={data.content.about.title}
+              subtitle={data.content.about.label}
             />
             <div className="surface-card grid gap-7 border-white/10 bg-white/5 p-6 text-slate-200 lg:grid-cols-2 lg:p-9">
               <p className="text-base leading-relaxed text-slate-300">{data.content.about.summary}</p>
@@ -629,15 +619,16 @@ export function PortfolioClient({
         <section id="skills" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading
-              title="Core stack I use to ship reliable products."
-              subtitle="Skills"
+              title={data.content.presentation.skills.title}
+              subtitle={data.content.presentation.skills.label}
+              accent={data.content.presentation.skills.accent}
             />
           </Reveal>
           <Reveal>
             <div className="surface-card border-white/10 bg-white/5 p-4 sm:p-6">
               <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
-                  Visual stack rails for the languages, frameworks, data systems, DevOps tools, and blockchain workflows I use most.
+                  {data.content.presentation.skills.accent}
                 </p>
                 <span className="chip w-fit border-white/15 bg-white/8 text-slate-100">Moving stack carousel</span>
               </div>
@@ -665,8 +656,8 @@ export function PortfolioClient({
           <Reveal>
             <SectionHeading
               title={data.content.stellarSection.title}
-              subtitle="Stellar / Soroban OSS"
-              accent="60+ ecosystem contributions across contracts, APIs, SDKs, and developer tooling."
+              subtitle={data.content.stellarSection.label}
+              accent={data.content.stellarSection.accent}
             />
 
             <div className="surface-card border-white/10 bg-white/5 p-6 lg:p-8">
@@ -705,9 +696,9 @@ export function PortfolioClient({
         <section id="projects" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading
-              title="Project work with polished visuals and production constraints."
-              subtitle="Projects"
-              accent="Hover cards for micro-interaction polish. Scroll sequencing emphasizes each row naturally."
+              title={data.content.presentation.projects.title}
+              subtitle={data.content.presentation.projects.label}
+              accent={data.content.presentation.projects.accent}
             />
           </Reveal>
 
@@ -721,8 +712,9 @@ export function PortfolioClient({
         <section id="credibility" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading
-              title="GitHub credibility that clients can evaluate quickly."
-              subtitle="Credibility"
+              title={data.content.presentation.credibility.title}
+              subtitle={data.content.presentation.credibility.label}
+              accent={data.content.presentation.credibility.accent}
             />
           </Reveal>
 
@@ -782,7 +774,11 @@ export function PortfolioClient({
 
         <section id="experience" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="Experience timeline" subtitle="Experience" />
+            <SectionHeading
+              title={data.content.presentation.experience.title}
+              subtitle={data.content.presentation.experience.label}
+              accent={data.content.presentation.experience.accent}
+            />
             <div className="space-y-4">
               {data.content.experience.map((item) => (
                 <article key={`${item.company}-${item.period}`} className="surface-card border-white/10 bg-white/5 p-6">
@@ -808,7 +804,11 @@ export function PortfolioClient({
 
         <section className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="Education" subtitle="Resume" />
+            <SectionHeading
+              title={data.content.presentation.education.title}
+              subtitle={data.content.presentation.education.label}
+              accent={data.content.presentation.education.accent}
+            />
             <div className="grid gap-4 lg:grid-cols-3">
               {data.content.education.map((item) => (
                 <article key={`${item.school}-${item.period}`} className="surface-card border-white/10 bg-white/5 p-5">
@@ -827,7 +827,11 @@ export function PortfolioClient({
 
         <section id="awards" className="section-shell py-12 lg:py-16">
           <Reveal>
-            <SectionHeading title="Awards & recognition" subtitle="Awards" />
+            <SectionHeading
+              title={data.content.presentation.awards.title}
+              subtitle={data.content.presentation.awards.label}
+              accent={data.content.presentation.awards.accent}
+            />
           </Reveal>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -873,14 +877,14 @@ export function PortfolioClient({
         <section id="contact" className="section-shell py-12 lg:py-16">
           <Reveal>
             <SectionHeading
-              title="Let’s build a fast, polished, and resilient product together."
-              subtitle="Contact"
+              title={data.content.contact.title}
+              subtitle={data.content.contact.label}
             />
 
             <div className="surface-card grid gap-6 border-white/10 bg-white/5 p-6 lg:grid-cols-2 lg:p-8">
               <div>
                 <p className="mb-4 text-sm leading-relaxed text-slate-300 sm:text-base">
-                  Available for product engineering, frontend architecture, and blockchain-integrated full-stack delivery.
+                  {data.content.contact.intro}
                 </p>
                 <div className="space-y-2 text-sm text-slate-200">
                   <p className="inline-flex items-center gap-2">

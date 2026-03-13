@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type MouseEvent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+
+import type { SiteContentDoc } from "@/types/portfolio";
 
 const CodePattern = () => (
   <svg
@@ -28,20 +29,32 @@ const CodePattern = () => (
   </svg>
 );
 
-const TypewriterEffect = () => {
-  const texts = [
-    "Software Developer",
-    "MERN Developer",
-    "Blockchain Developer",
-    "DevOps Engineer",
-  ];
+function getImageUrl(imageId?: string, fallback?: string) {
+  if (imageId) return `/api/media/${imageId}`;
+  return fallback || "/images/emmanuel.png";
+}
+
+function handleAnchorClick(href: string) {
+  return (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!href.startsWith("#")) return;
+
+    const target = document.getElementById(href.slice(1));
+    if (!target) return;
+
+    event.preventDefault();
+    target.scrollIntoView({ behavior: "smooth" });
+  };
+}
+
+const TypewriterEffect = ({ texts }: { texts: string[] }) => {
+  const safeTexts = texts.length ? texts : ["Software Developer"];
   const [index, setIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [typing, setTyping] = useState(true);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
-    const currentText = texts[index];
+    const currentText = safeTexts[index];
 
     if (typing) {
       if (displayText.length < currentText.length) {
@@ -57,11 +70,11 @@ const TypewriterEffect = () => {
       }, 100);
     } else {
       setTyping(true);
-      setIndex((prevIndex) => (prevIndex + 1) % texts.length);
+      setIndex((prevIndex) => (prevIndex + 1) % safeTexts.length);
     }
 
     return () => clearTimeout(timeout);
-  }, [displayText, typing, index]);
+  }, [displayText, typing, index, safeTexts]);
 
   return (
     <span className="inline-block min-h-[2rem] tracking-tight">
@@ -87,9 +100,7 @@ const TypewriterEffect = () => {
   );
 };
 
-const CodeNameEffect = () => {
-  const name = "Okoye Emmanuel Obiajulu";
-
+const CodeNameEffect = ({ name }: { name: string }) => {
   return (
     <div className="relative inline-block">
       <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -136,7 +147,31 @@ const CodeNameEffect = () => {
   );
 };
 
-export default function Hero() {
+export default function Hero({ content }: { content: SiteContentDoc }) {
+  const socialLinks = [
+    {
+      href: content.socials.github,
+      label: "GitHub Profile",
+      icon: FaGithub,
+    },
+    {
+      href: content.socials.linkedin,
+      label: "LinkedIn Profile",
+      icon: FaLinkedin,
+    },
+    {
+      href: content.socials.x,
+      label: "X Profile",
+      icon: FaXTwitter,
+    },
+  ].filter((item) => item.href);
+
+  const heroImageSrc = getImageUrl(content.hero.heroImageId, content.hero.heroImageFallback);
+  const primaryHref = content.hero.primaryCtaUrl || "#about";
+  const secondaryHref = content.hero.secondaryCtaUrl || "";
+  const primaryOpensNewTab = primaryHref.startsWith("http");
+  const secondaryOpensNewTab = secondaryHref.startsWith("http") || secondaryHref.endsWith(".pdf");
+
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden border-b border-white/10">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_18%,rgba(72,154,221,0.18),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(252,175,101,0.16),transparent_24%),linear-gradient(180deg,rgba(7,15,26,0.65),rgba(7,15,26,0.18))]" />
@@ -158,56 +193,63 @@ export default function Hero() {
             transition={{ duration: 0.6 }}
           >
             <p className="chip mx-auto mb-5 w-fit border-white/15 bg-white/8 text-slate-100 lg:mx-0">
-              Full-stack and blockchain engineer
+              {content.hero.eyebrow}
             </p>
-            <CodeNameEffect />
+            <CodeNameEffect name={content.hero.name} />
             <h2 className="mb-6 mt-6 text-2xl font-semibold text-slate-200 md:text-3xl">
               <span className="inline-block min-h-[2.5rem]">
-                <TypewriterEffect />
+                <TypewriterEffect texts={content.hero.roles} />
               </span>
             </h2>
             <p className="mx-auto mb-8 max-w-2xl text-lg text-slate-300 md:text-xl lg:mx-0">
-              Crafting exceptional digital experiences with modern web technologies. Specialized in
-              building scalable full-stack applications.
+              {content.hero.description}
             </p>
-            <div className="mb-8 flex justify-center space-x-4 lg:justify-start">
-              <Link
-                href="https://github.com/Obiajulu-gif"
-                className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
-                aria-label="GitHub Profile"
+            {socialLinks.length ? (
+              <div className="mb-8 flex justify-center space-x-4 lg:justify-start">
+                {socialLinks.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={label}
+                    href={href}
+                    target={href.startsWith("http") ? "_blank" : undefined}
+                    rel={href.startsWith("http") ? "noreferrer" : undefined}
+                    className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
+                    aria-label={label}
+                  >
+                    <Icon className="h-6 w-6 text-slate-100" />
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               >
-                <FaGithub className="h-6 w-6 text-slate-100" />
-              </Link>
-              <Link
-                href="https://www.linkedin.com/in/emmanuel-okoye-79a387200/"
-                className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
-                aria-label="LinkedIn Profile"
-              >
-                <FaLinkedin className="h-6 w-6 text-slate-100" />
-              </Link>
-              <Link
-                href="https://www.x.com/okoye_emma_obi"
-                className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
-                aria-label="Email Contact"
-              >
-                <FaXTwitter className="h-6 w-6 text-slate-100" />
-              </Link>
+                <Link
+                  href={primaryHref}
+                  onClick={handleAnchorClick(primaryHref)}
+                  target={primaryOpensNewTab ? "_blank" : undefined}
+                  rel={primaryOpensNewTab ? "noreferrer" : undefined}
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/90 px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_44px_rgba(20,143,180,0.28)] transition-all duration-300 hover:bg-primary"
+                >
+                  {content.hero.primaryCtaLabel}
+                </Link>
+              </motion.div>
+
+              {content.hero.secondaryCtaLabel && secondaryHref ? (
+                <Link
+                  href={secondaryHref}
+                  onClick={handleAnchorClick(secondaryHref)}
+                  target={secondaryOpensNewTab ? "_blank" : undefined}
+                  rel={secondaryOpensNewTab ? "noreferrer" : undefined}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/6 px-6 py-3 text-sm font-semibold text-slate-100 transition-colors duration-300 hover:border-white/25 hover:bg-white/10"
+                >
+                  {content.hero.secondaryCtaLabel}
+                </Link>
+              ) : null}
             </div>
-            <motion.button
-              onClick={() =>
-                document
-                  .getElementById("about")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/90 px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_44px_rgba(20,143,180,0.28)] transition-all duration-300 hover:bg-primary"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            >
-              Learn More
-              <ArrowDown className="h-4 w-4" />
-            </motion.button>
           </motion.div>
           <motion.div
             className="lg:w-1/2"
@@ -221,8 +263,8 @@ export default function Hero() {
               <div className="absolute inset-0 -rotate-[5deg] rounded-[2rem] border border-white/10 bg-white/5"></div>
               <div className="absolute inset-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#081321]/90 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
                 <Image
-                  src="/images/emmanuel.png"
-                  alt="Okoye Emmanuel Obiajulu"
+                  src={heroImageSrc}
+                  alt={content.hero.name}
                   fill
                   className="object-cover object-[50%_-20px]"
                   priority

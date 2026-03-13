@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AwardDoc, ImageDoc, ProjectDoc, SiteContentDoc, SkillDoc } from "@/types/portfolio";
 
 const contentSchema = z.object({
+  brandName: z.string().min(1),
+  navigationJson: z.string().min(2),
   heroName: z.string().min(1),
   heroEyebrow: z.string().min(1),
   heroRolesCsv: z.string().min(1),
@@ -25,20 +27,41 @@ const contentSchema = z.object({
   secondaryCtaLabel: z.string().min(1),
   secondaryCtaUrl: z.string().min(1),
   heroImageId: z.string().optional(),
+  aboutLabel: z.string().min(1),
   aboutTitle: z.string().min(1),
   aboutSummary: z.string().min(1),
   aboutBody: z.string().min(1),
+  skillsLabel: z.string().min(1),
+  skillsTitle: z.string().min(1),
+  skillsAccent: z.string().min(1),
+  projectsLabel: z.string().min(1),
+  projectsTitle: z.string().min(1),
+  projectsAccent: z.string().min(1),
+  credibilityLabel: z.string().min(1),
+  credibilityTitle: z.string().min(1),
+  credibilityAccent: z.string().optional(),
+  experienceLabel: z.string().min(1),
+  experienceTitle: z.string().min(1),
+  educationLabel: z.string().min(1),
+  educationTitle: z.string().min(1),
+  awardsLabel: z.string().min(1),
+  awardsTitle: z.string().min(1),
   github: z.string().min(1),
   linkedin: z.string().min(1),
   x: z.string().min(1),
   emailLink: z.string().min(1),
   website: z.string().min(1),
+  contactLabel: z.string().min(1),
+  contactTitle: z.string().min(1),
+  contactIntro: z.string().min(1),
   contactEmail: z.string().min(1),
   contactPhone: z.string().min(1),
   contactLocation: z.string().min(1),
+  stellarLabel: z.string().min(1),
   stellarTitle: z.string().min(1),
   stellarIntro: z.string().min(1),
   stellarContribution: z.string().min(1),
+  stellarAccent: z.string().min(1),
   stellarProjectsCsv: z.string().min(1),
   experienceJson: z.string().min(2),
   educationJson: z.string().min(2),
@@ -89,6 +112,8 @@ function commaStringToArray(value: string) {
 
 function mapContentToForm(content: SiteContentDoc) {
   return {
+    brandName: content.presentation.brandName,
+    navigationJson: JSON.stringify(content.presentation.navigation, null, 2),
     heroName: content.hero.name,
     heroEyebrow: content.hero.eyebrow,
     heroRolesCsv: content.hero.roles.join(", "),
@@ -98,20 +123,41 @@ function mapContentToForm(content: SiteContentDoc) {
     secondaryCtaLabel: content.hero.secondaryCtaLabel,
     secondaryCtaUrl: content.hero.secondaryCtaUrl,
     heroImageId: content.hero.heroImageId || "",
+    aboutLabel: content.about.label,
     aboutTitle: content.about.title,
     aboutSummary: content.about.summary,
     aboutBody: content.about.body,
+    skillsLabel: content.presentation.skills.label,
+    skillsTitle: content.presentation.skills.title,
+    skillsAccent: content.presentation.skills.accent || "",
+    projectsLabel: content.presentation.projects.label,
+    projectsTitle: content.presentation.projects.title,
+    projectsAccent: content.presentation.projects.accent || "",
+    credibilityLabel: content.presentation.credibility.label,
+    credibilityTitle: content.presentation.credibility.title,
+    credibilityAccent: content.presentation.credibility.accent || "",
+    experienceLabel: content.presentation.experience.label,
+    experienceTitle: content.presentation.experience.title,
+    educationLabel: content.presentation.education.label,
+    educationTitle: content.presentation.education.title,
+    awardsLabel: content.presentation.awards.label,
+    awardsTitle: content.presentation.awards.title,
     github: content.socials.github,
     linkedin: content.socials.linkedin,
     x: content.socials.x,
     emailLink: content.socials.email,
     website: content.socials.website,
+    contactLabel: content.contact.label,
+    contactTitle: content.contact.title,
+    contactIntro: content.contact.intro,
     contactEmail: content.contact.email,
     contactPhone: content.contact.phone,
     contactLocation: content.contact.location,
+    stellarLabel: content.stellarSection.label,
     stellarTitle: content.stellarSection.title,
     stellarIntro: content.stellarSection.intro,
     stellarContribution: content.stellarSection.contribution,
+    stellarAccent: content.stellarSection.accent,
     stellarProjectsCsv: content.stellarSection.projectNames.join(", "),
     experienceJson: JSON.stringify(content.experience, null, 2),
     educationJson: JSON.stringify(content.education, null, 2),
@@ -191,6 +237,7 @@ export function AdminDashboardClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [savingContent, setSavingContent] = useState(false);
+  const [syncingDefaults, setSyncingDefaults] = useState(false);
   const [syncingProjects, setSyncingProjects] = useState(false);
   const [skills, setSkills] = useState<SkillDoc[]>([]);
   const [projects, setProjects] = useState<ProjectDoc[]>([]);
@@ -405,6 +452,7 @@ export function AdminDashboardClient() {
   const handleSaveContent = contentForm.handleSubmit(async (values) => {
     setSavingContent(true);
     try {
+      const navigation = JSON.parse(values.navigationJson);
       const experience = JSON.parse(values.experienceJson);
       const education = JSON.parse(values.educationJson);
 
@@ -423,9 +471,41 @@ export function AdminDashboardClient() {
             heroImageId: values.heroImageId || undefined,
           },
           about: {
+            label: values.aboutLabel,
             title: values.aboutTitle,
             summary: values.aboutSummary,
             body: values.aboutBody,
+          },
+          presentation: {
+            brandName: values.brandName,
+            navigation,
+            skills: {
+              label: values.skillsLabel,
+              title: values.skillsTitle,
+              accent: values.skillsAccent,
+            },
+            projects: {
+              label: values.projectsLabel,
+              title: values.projectsTitle,
+              accent: values.projectsAccent,
+            },
+            credibility: {
+              label: values.credibilityLabel,
+              title: values.credibilityTitle,
+              accent: values.credibilityAccent,
+            },
+            experience: {
+              label: values.experienceLabel,
+              title: values.experienceTitle,
+            },
+            education: {
+              label: values.educationLabel,
+              title: values.educationTitle,
+            },
+            awards: {
+              label: values.awardsLabel,
+              title: values.awardsTitle,
+            },
           },
           socials: {
             github: values.github,
@@ -435,14 +515,19 @@ export function AdminDashboardClient() {
             website: values.website,
           },
           contact: {
+            label: values.contactLabel,
+            title: values.contactTitle,
+            intro: values.contactIntro,
             email: values.contactEmail,
             phone: values.contactPhone,
             location: values.contactLocation,
           },
           stellarSection: {
+            label: values.stellarLabel,
             title: values.stellarTitle,
             intro: values.stellarIntro,
             contribution: values.stellarContribution,
+            accent: values.stellarAccent,
             projectNames: commaStringToArray(values.stellarProjectsCsv),
           },
           experience,
@@ -463,6 +548,28 @@ export function AdminDashboardClient() {
       setSavingContent(false);
     }
   });
+
+  const handleSyncDefaults = async () => {
+    setSyncingDefaults(true);
+    try {
+      const result = await apiFetch<{
+        skillsCount: number;
+        projectsCount: number;
+        awardsCount: number;
+      }>("/api/admin/content/sync", {
+        method: "POST",
+      });
+
+      await loadAll();
+      toast.success(
+        `Synced frontend defaults to MongoDB (${result.skillsCount} skills, ${result.projectsCount} projects, ${result.awardsCount} awards).`,
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to sync frontend defaults");
+    } finally {
+      setSyncingDefaults(false);
+    }
+  };
 
   const handleCreateSkill = createSkillForm.handleSubmit(async (values) => {
     const optimistic: SkillDoc = {
@@ -770,6 +877,10 @@ export function AdminDashboardClient() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" disabled={syncingDefaults} onClick={handleSyncDefaults}>
+            {syncingDefaults ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Sync Frontend Defaults
+          </Button>
           <Button variant="outline" onClick={() => void loadAll()}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -793,10 +904,24 @@ export function AdminDashboardClient() {
         <TabsContent value="content">
           <Card>
             <CardHeader>
-              <CardTitle>Core site content</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="grid gap-4" onSubmit={handleSaveContent}>
+            <CardTitle>Core site content</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="grid gap-4" onSubmit={handleSaveContent}>
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">Site chrome</p>
+                <div className="grid gap-4">
+                  <Input placeholder="Brand name" {...contentForm.register("brandName")} />
+                  <Textarea
+                    rows={8}
+                    placeholder='Navigation JSON, e.g. [{"id":"about","label":"About"}]'
+                    {...contentForm.register("navigationJson")}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">Hero</p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Input placeholder="Hero Name" {...contentForm.register("heroName")} />
                   <Input placeholder="Hero Eyebrow" {...contentForm.register("heroEyebrow")} />
@@ -816,28 +941,76 @@ export function AdminDashboardClient() {
                   onChange={(value) => contentForm.setValue("heroImageId", value)}
                   images={sortedImages}
                 />
-                <div className="grid gap-4 md:grid-cols-3">
+              </div>
+
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">About</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input placeholder="About label" {...contentForm.register("aboutLabel")} />
                   <Input placeholder="About title" {...contentForm.register("aboutTitle")} />
-                  <Input placeholder="Contact email" {...contentForm.register("contactEmail")} />
-                  <Input placeholder="Contact phone" {...contentForm.register("contactPhone")} />
                 </div>
                 <Textarea placeholder="About summary" {...contentForm.register("aboutSummary")} />
                 <Textarea placeholder="About body" {...contentForm.register("aboutBody")} />
+              </div>
+
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">Section headings</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input placeholder="Skills label" {...contentForm.register("skillsLabel")} />
+                  <Input placeholder="Skills title" {...contentForm.register("skillsTitle")} />
+                  <Textarea placeholder="Skills accent" {...contentForm.register("skillsAccent")} />
+                  <div />
+                  <Input placeholder="Projects label" {...contentForm.register("projectsLabel")} />
+                  <Input placeholder="Projects title" {...contentForm.register("projectsTitle")} />
+                  <Textarea placeholder="Projects accent" {...contentForm.register("projectsAccent")} />
+                  <div />
+                  <Input placeholder="Credibility label" {...contentForm.register("credibilityLabel")} />
+                  <Input placeholder="Credibility title" {...contentForm.register("credibilityTitle")} />
+                  <Textarea placeholder="Credibility accent (optional)" {...contentForm.register("credibilityAccent")} />
+                  <div />
+                  <Input placeholder="Experience label" {...contentForm.register("experienceLabel")} />
+                  <Input placeholder="Experience title" {...contentForm.register("experienceTitle")} />
+                  <Input placeholder="Education label" {...contentForm.register("educationLabel")} />
+                  <Input placeholder="Education title" {...contentForm.register("educationTitle")} />
+                  <Input placeholder="Awards label" {...contentForm.register("awardsLabel")} />
+                  <Input placeholder="Awards title" {...contentForm.register("awardsTitle")} />
+                </div>
+              </div>
+
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">Socials and contact</p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Input placeholder="GitHub URL" {...contentForm.register("github")} />
                   <Input placeholder="LinkedIn URL" {...contentForm.register("linkedin")} />
                   <Input placeholder="X URL" {...contentForm.register("x")} />
                   <Input placeholder="Email link (mailto:...)" {...contentForm.register("emailLink")} />
                   <Input placeholder="Website URL" {...contentForm.register("website")} />
+                  <Input placeholder="Contact label" {...contentForm.register("contactLabel")} />
+                  <Input placeholder="Contact title" {...contentForm.register("contactTitle")} />
+                  <Input placeholder="Contact email" {...contentForm.register("contactEmail")} />
+                  <Input placeholder="Contact phone" {...contentForm.register("contactPhone")} />
                   <Input placeholder="Contact location" {...contentForm.register("contactLocation")} />
                 </div>
-                <Input placeholder="Stellar section title" {...contentForm.register("stellarTitle")} />
+                <Textarea placeholder="Contact intro" {...contentForm.register("contactIntro")} />
+              </div>
+
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">Stellar section</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input placeholder="Stellar label" {...contentForm.register("stellarLabel")} />
+                  <Input placeholder="Stellar section title" {...contentForm.register("stellarTitle")} />
+                </div>
                 <Textarea placeholder="Stellar intro" {...contentForm.register("stellarIntro")} />
                 <Textarea placeholder="Stellar contribution statement" {...contentForm.register("stellarContribution")} />
+                <Textarea placeholder="Stellar accent" {...contentForm.register("stellarAccent")} />
                 <Input
                   placeholder="Stellar project names (comma-separated)"
                   {...contentForm.register("stellarProjectsCsv")}
                 />
+              </div>
+
+              <div className="rounded border border-border p-4">
+                <p className="mb-3 text-sm font-medium">Resume lists and structured content</p>
                 <Textarea
                   rows={10}
                   placeholder="Experience JSON array"
@@ -855,6 +1028,7 @@ export function AdminDashboardClient() {
                 <Input placeholder="Resume awards (comma-separated)" {...contentForm.register("awardsCsv")} />
                 <Input placeholder="Resume core skills (comma-separated)" {...contentForm.register("coreSkillsCsv")} />
                 <Input placeholder="Resume URL" {...contentForm.register("resumeUrl")} />
+              </div>
                 <Button type="submit" disabled={savingContent}>
                   {savingContent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   Save Content

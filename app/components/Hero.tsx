@@ -101,7 +101,6 @@ const TypewriterEffect = () => {
   );
 };
 
-// New component for a glitch coding effect on your name
 const CodeNameEffect = () => {
   const name = "Okoye Emmanuel Obiajulu";
   return (

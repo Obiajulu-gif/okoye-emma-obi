@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Okoye Emmanuel Obiajulu | Full-Stack & Stellar Engineer",
+  title: "Okoye Emmanuel Obiajulu | Full-Stack & Blockchain Engineer",
   description:
     "Portfolio of Okoye Emmanuel Obiajulu featuring full-stack engineering work, Stellar/Soroban OSS contributions, and client-ready delivery experience.",
   keywords: [
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL("https://okoye-emma-obi.vercel.app"),
   openGraph: {
-    title: "Okoye Emmanuel Obiajulu | Full-Stack & Stellar Engineer",
+    title: "Okoye Emmanuel Obiajulu | Full-Stack & Blockchain Engineer",
     description:
       "Production-grade web and blockchain engineering with strong UX and maintainable architecture.",
     url: "https://okoye-emma-obi.vercel.app",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Okoye Emmanuel Obiajulu | Full-Stack & Stellar Engineer",
+    title: "Okoye Emmanuel Obiajulu | Full-Stack & Blockchain Engineer",
     description:
       "Production-grade web and blockchain engineering with strong UX and maintainable architecture.",
     images: ["/images/emmanuel.png"],

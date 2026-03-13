@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
   Award,
   Blocks,
   BriefcaseBusiness,
@@ -40,8 +39,7 @@ import {
   SiTypescript,
 } from "react-icons/si";
 
-import { Hero3DPanel } from "@/components/site/hero-3d-panel";
-import { Button } from "@/components/ui/button";
+import Hero from "@/app/components/Hero";
 import { useGsapReveal } from "@/hooks/use-gsap-reveal";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { stellarContributionRepoUrls } from "@/lib/default-data";
@@ -515,7 +513,6 @@ export function PortfolioClient({
   const reduceMotion = usePrefersReducedMotion();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const heroRef = useRef<HTMLElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const featuredProjects = useMemo(() => data.projects.filter((project) => project.featured), [data.projects]);
@@ -534,25 +531,6 @@ export function PortfolioClient({
     () => splitForRows(stellarProjects.filter((project) => project.url)),
     [stellarProjects],
   );
-
-  useLayoutEffect(() => {
-    if (reduceMotion) return;
-    const root = heroRef.current;
-    if (!root) return;
-
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.from("[data-hero-eyebrow]", { y: 18, opacity: 0, duration: 0.42 })
-        .from("[data-hero-intro]", { y: 18, opacity: 0, duration: 0.42 }, "-=0.2")
-        .from("[data-hero-word]", { y: 56, opacity: 0, duration: 0.74, stagger: 0.07 }, "-=0.16")
-        .from("[data-hero-role]", { y: 20, opacity: 0, duration: 0.5, stagger: 0.05 }, "-=0.45")
-        .from("[data-hero-copy]", { y: 24, opacity: 0, duration: 0.6 }, "-=0.45")
-        .from("[data-hero-cta]", { y: 18, opacity: 0, duration: 0.45, stagger: 0.08 }, "-=0.35")
-        .from("[data-hero-canvas]", { scale: 0.93, opacity: 0, duration: 1.2, ease: "power4.out" }, "-=1.0");
-    }, root);
-
-    return () => ctx.revert();
-  }, [reduceMotion]);
 
   useEffect(() => {
     const panel = mobileMenuRef.current;
@@ -633,61 +611,7 @@ export function PortfolioClient({
       </header>
 
       <main>
-        <section
-          id="hero"
-          ref={heroRef}
-          className="section-shell relative grid gap-12 py-14 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24"
-        >
-          <div className="max-w-2xl">
-            <p data-hero-eyebrow className="mb-6 inline-flex rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              {data.content.hero.eyebrow}
-            </p>
-
-            <p data-hero-intro className="mb-3 text-lg font-medium tracking-[0.08em] text-slate-200 sm:text-xl">
-              I&apos;m Emmanuel,
-            </p>
-
-            <h1 className="mb-6 text-4xl font-semibold leading-[1.03] text-white sm:text-5xl lg:text-6xl">
-              {data.content.hero.name.split(" ").map((word, index) => (
-                <span key={`${word}-${index}`} data-hero-word className="mr-[0.28em] inline-block">
-                  {word}
-                </span>
-              ))}
-            </h1>
-
-            <div className="mb-6 flex flex-wrap gap-2">
-              {data.content.hero.roles.map((role) => (
-                <span
-                  key={role}
-                  data-hero-role
-                  className="chip border-white/20 bg-white/8 text-slate-100"
-                >
-                  {role}
-                </span>
-              ))}
-            </div>
-
-            <p data-hero-copy className="mb-8 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-              {data.content.hero.description}
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90" data-hero-cta>
-                <Link href={data.content.hero.primaryCtaUrl}>
-                  {data.content.hero.primaryCtaLabel}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-full border-white/20 bg-white/5 text-slate-100 hover:bg-white/10" data-hero-cta>
-                <Link href={data.content.hero.secondaryCtaUrl}>{data.content.hero.secondaryCtaLabel}</Link>
-              </Button>
-            </div>
-          </div>
-
-          <div data-hero-canvas className="gradient-stroke rounded-[2rem] p-[1px]">
-            <Hero3DPanel imageSrc={getImageUrl(data.content.hero.heroImageId, data.content.hero.heroImageFallback)} />
-          </div>
-        </section>
+        <Hero />
 
         <section id="about" className="section-shell py-12 lg:py-16">
           <Reveal>

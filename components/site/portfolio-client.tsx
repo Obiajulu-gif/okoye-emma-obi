@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   Award,
+  Blocks,
   BriefcaseBusiness,
+  Code2,
   ExternalLink,
+  Globe,
   Github,
   GraduationCap,
   LineChart,
@@ -16,31 +18,36 @@ import {
   Menu,
   Phone,
   Rocket,
+  Sparkles,
   Star,
   Users,
+  Wrench,
   X,
 } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import {
+  SiGithubactions,
+  SiJavascript,
+  SiLinux,
+  SiNextdotjs,
+  SiNodedotjs,
+  SiPostgresql,
+  SiPython,
+  SiReact,
+  SiRust,
+  SiTailwindcss,
+  SiTypescript,
+} from "react-icons/si";
 
+import { Hero3DPanel } from "@/components/site/hero-3d-panel";
 import { Button } from "@/components/ui/button";
 import { useGsapReveal } from "@/hooks/use-gsap-reveal";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { stellarContributionRepoUrls } from "@/lib/default-data";
 import type { GitHubCredibilityStats, PortfolioData, ProjectDoc } from "@/types/portfolio";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const Hero3DPanel = dynamic(
-  () => import("@/components/site/hero-3d-panel").then((module) => module.Hero3DPanel),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="relative h-full min-h-[360px] w-full overflow-hidden rounded-[2rem] border border-white/20 bg-[radial-gradient(circle_at_20%_20%,rgba(84,156,223,0.26),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(255,177,102,0.24),transparent_40%),linear-gradient(180deg,#020815_0%,#07111e_60%,#050c16_100%)]">
-        <div className="absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.15),transparent_48%)]" />
-      </div>
-    ),
-  },
-);
 
 const navItems = [
   { id: "about", label: "About" },
@@ -52,6 +59,160 @@ const navItems = [
   { id: "awards", label: "Awards" },
   { id: "contact", label: "Contact" },
 ];
+
+const curatedProjectStacks: Record<string, string[]> = {
+  Reapvest: ["React", "JavaScript", "MongoDB"],
+  ChainMove: ["Next.js", "Node.js", "MongoDB"],
+  Suibuy: ["Next.js", "Node.js", "Tailwind CSS"],
+  SmartFin: ["Next.js", "TypeScript", "MongoDB"],
+  Swift: ["Next.js", "TypeScript", "Tailwind CSS"],
+  "Zeus Scholarly": ["Next.js", "TypeScript", "Python"],
+  Cresa: ["Next.js", "Node.js", "MongoDB"],
+  Governator: ["React", "Solidity", "JavaScript"],
+  Easybuy: ["Next.js", "Node.js", "MongoDB"],
+  Camsole: ["React", "Node.js", "MongoDB"],
+};
+
+type TechVisual = {
+  imageSrc?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  shellClassName: string;
+  iconClassName: string;
+};
+
+const fallbackTechVisual: TechVisual = {
+  icon: Code2,
+  shellClassName: "bg-white/10 ring-1 ring-white/15",
+  iconClassName: "text-slate-100",
+};
+
+const techVisuals: Record<string, TechVisual> = {
+  typescript: {
+    icon: SiTypescript,
+    shellClassName: "bg-[#3178c6]/15 ring-1 ring-[#3178c6]/30",
+    iconClassName: "text-[#69b7ff]",
+  },
+  javascript: {
+    icon: SiJavascript,
+    shellClassName: "bg-[#f7df1e]/15 ring-1 ring-[#f7df1e]/30",
+    iconClassName: "text-[#f7df1e]",
+  },
+  python: {
+    icon: SiPython,
+    shellClassName: "bg-[#3776ab]/15 ring-1 ring-[#3776ab]/30",
+    iconClassName: "text-[#7cc5ff]",
+  },
+  rust: {
+    icon: SiRust,
+    shellClassName: "bg-[#ce422b]/15 ring-1 ring-[#ce422b]/30",
+    iconClassName: "text-[#ff8b6c]",
+  },
+  solidity: {
+    imageSrc: "/logos/solidity.png",
+    shellClassName: "bg-white/10 ring-1 ring-white/15",
+    iconClassName: "text-slate-100",
+  },
+  nextjs: {
+    icon: SiNextdotjs,
+    shellClassName: "bg-white/10 ring-1 ring-white/15",
+    iconClassName: "text-white",
+  },
+  react: {
+    icon: SiReact,
+    shellClassName: "bg-[#61dafb]/12 ring-1 ring-[#61dafb]/25",
+    iconClassName: "text-[#61dafb]",
+  },
+  tailwindcss: {
+    icon: SiTailwindcss,
+    shellClassName: "bg-[#38bdf8]/15 ring-1 ring-[#38bdf8]/30",
+    iconClassName: "text-[#67d5ff]",
+  },
+  nodejs: {
+    icon: SiNodedotjs,
+    shellClassName: "bg-[#5fa04e]/15 ring-1 ring-[#5fa04e]/30",
+    iconClassName: "text-[#7fd46b]",
+  },
+  mongodb: {
+    imageSrc: "/logos/mongodb.png",
+    shellClassName: "bg-[#47a248]/15 ring-1 ring-[#47a248]/30",
+    iconClassName: "text-[#7ad57b]",
+  },
+  postgresql: {
+    icon: SiPostgresql,
+    shellClassName: "bg-[#336791]/15 ring-1 ring-[#336791]/30",
+    iconClassName: "text-[#7ab7ee]",
+  },
+  redis: {
+    imageSrc: "/logos/redis.png",
+    shellClassName: "bg-[#d82c20]/15 ring-1 ring-[#d82c20]/30",
+    iconClassName: "text-[#ff7f75]",
+  },
+  docker: {
+    imageSrc: "/logos/docker.png",
+    shellClassName: "bg-[#1d63ed]/15 ring-1 ring-[#1d63ed]/30",
+    iconClassName: "text-[#77a8ff]",
+  },
+  flask: {
+    imageSrc: "/logos/flask.png",
+    shellClassName: "bg-white/10 ring-1 ring-white/15",
+    iconClassName: "text-white",
+  },
+  githubactions: {
+    icon: SiGithubactions,
+    shellClassName: "bg-[#2088ff]/15 ring-1 ring-[#2088ff]/30",
+    iconClassName: "text-[#70b2ff]",
+  },
+  linux: {
+    icon: SiLinux,
+    shellClassName: "bg-[#fbc02d]/15 ring-1 ring-[#fbc02d]/30",
+    iconClassName: "text-[#ffd86c]",
+  },
+  soroban: {
+    icon: Blocks,
+    shellClassName: "bg-primary/15 ring-1 ring-primary/30",
+    iconClassName: "text-primary",
+  },
+  stellarsdk: {
+    icon: Globe,
+    shellClassName: "bg-secondary/15 ring-1 ring-secondary/30",
+    iconClassName: "text-secondary",
+  },
+  gsap: {
+    icon: Sparkles,
+    shellClassName: "bg-[#88ce02]/15 ring-1 ring-[#88ce02]/30",
+    iconClassName: "text-[#b7eb63]",
+  },
+};
+
+function normalizeTechLabel(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getTechVisual(label: string) {
+  return techVisuals[normalizeTechLabel(label)] || fallbackTechVisual;
+}
+
+function getProjectStacks(project: ProjectDoc) {
+  const explicitStacks = [...project.tags, ...(project.languages || [])].filter(Boolean);
+  const fallbackStacks = curatedProjectStacks[project.name] || [];
+  return Array.from(new Set((explicitStacks.length ? explicitStacks : fallbackStacks).slice(0, 8)));
+}
+
+function splitForRows<T>(items: T[]) {
+  const first: T[] = [];
+  const second: T[] = [];
+
+  items.forEach((item, index) => {
+    if (index % 2 === 0) {
+      first.push(item);
+      return;
+    }
+
+    second.push(item);
+  });
+
+  return [first, second] as const;
+}
 
 function getImageUrl(imageId?: string, fallback?: string) {
   if (imageId) return `/api/media/${imageId}`;
@@ -95,8 +256,118 @@ function Reveal({
   );
 }
 
+function AutoScrollRail<T>({
+  items,
+  renderItem,
+  direction = "forward",
+  durationSeconds = 30,
+  reduceMotion,
+}: {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  direction?: "forward" | "reverse";
+  durationSeconds?: number;
+  reduceMotion: boolean;
+}) {
+  if (!items.length) return null;
+
+  if (reduceMotion) {
+    return <div className="flex flex-wrap gap-3">{items.map((item, index) => renderItem(item, index))}</div>;
+  }
+
+  const repeatedItems = [...items, ...items];
+
+  return (
+    <div className="auto-carousel-mask overflow-hidden py-1">
+      <div
+        className={`auto-carousel-track flex w-max gap-4 ${direction === "reverse" ? "auto-carousel-track-reverse" : ""}`}
+        style={{ "--scroll-duration": `${durationSeconds}s` } as React.CSSProperties}
+      >
+        {repeatedItems.map((item, index) => (
+          <div key={index} aria-hidden={index >= items.length}>
+            {renderItem(item, index % items.length)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TechToken({
+  label,
+  note,
+  compact = false,
+}: {
+  label: string;
+  note?: string;
+  compact?: boolean;
+}) {
+  const visual = getTechVisual(label);
+  const Icon = visual.icon;
+
+  return (
+    <div
+      className={`rounded-[1.35rem] border border-white/10 bg-[#081321]/90 ${
+        compact ? "min-w-[170px] px-3 py-3" : "min-w-[220px] px-4 py-4"
+      } shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition hover:border-primary/30 hover:bg-[#0b1829]`}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex ${compact ? "h-9 w-9 rounded-2xl" : "h-11 w-11 rounded-[1.15rem]"} items-center justify-center ${visual.shellClassName}`}
+        >
+          {visual.imageSrc ? (
+            <Image
+              src={visual.imageSrc}
+              alt=""
+              aria-hidden="true"
+              width={compact ? 18 : 22}
+              height={compact ? 18 : 22}
+              className="h-auto w-auto"
+            />
+          ) : Icon ? (
+            <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} ${visual.iconClassName}`} />
+          ) : null}
+        </div>
+
+        <div className="min-w-0">
+          {note ? <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{note}</p> : null}
+          <p className={`${compact ? "text-sm" : "text-base"} truncate font-semibold text-white`}>{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RepoCarouselCard({
+  project,
+}: {
+  project: {
+    name: string;
+    url: string;
+  };
+}) {
+  return (
+    <Link
+      href={project.url}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex min-w-[250px] items-center justify-between gap-4 rounded-[1.4rem] border border-white/10 bg-[#081321]/90 px-4 py-4 shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition hover:border-primary/35 hover:bg-[#0b1829]"
+    >
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Open source repo</p>
+        <h3 className="mt-1 text-sm font-semibold text-white">{project.name}</h3>
+      </div>
+
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-primary transition group-hover:border-primary/30 group-hover:bg-primary/10">
+        <Github className="h-4 w-4" />
+      </div>
+    </Link>
+  );
+}
+
 function ProjectCard({ project, reduceMotion }: { project: ProjectDoc; reduceMotion: boolean }) {
   const cardRef = useRef<HTMLElement | null>(null);
+  const stackLabels = useMemo(() => getProjectStacks(project), [project]);
   const revealRef = useGsapReveal<HTMLElement>({
     y: 44,
     duration: 0.95,
@@ -188,18 +459,20 @@ function ProjectCard({ project, reduceMotion }: { project: ProjectDoc; reduceMot
         {project.description || "Project details available in admin content."}
       </p>
 
-      <div className="mb-5 flex flex-wrap gap-2">
-        {(project.tags || []).slice(0, 3).map((tag) => (
-          <span key={`${project._id}-${tag}`} className="chip border-white/15 bg-white/10 text-slate-200">
-            {tag}
-          </span>
-        ))}
-        {(project.languages || []).slice(0, 2).map((lang) => (
-          <span key={`${project._id}-${lang}`} className="chip border-white/15 bg-white/10 text-slate-200">
-            {lang}
-          </span>
-        ))}
-      </div>
+      {stackLabels.length ? (
+        <div className="mb-5">
+          <p className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+            <Wrench className="h-3.5 w-3.5" />
+            Stack carousel
+          </p>
+          <AutoScrollRail
+            items={stackLabels}
+            renderItem={(stack) => <TechToken label={stack} compact />}
+            durationSeconds={stackLabels.length > 4 ? 18 : 24}
+            reduceMotion={reduceMotion}
+          />
+        </div>
+      ) : null}
 
       <div className="mt-auto flex items-center gap-4">
         {project.githubUrl ? (
@@ -252,9 +525,15 @@ export function PortfolioClient({
 
     return data.content.stellarSection.projectNames.map((name) => ({
       name,
-      url: lookup.get(name.toLowerCase())?.githubUrl || "",
+      url: lookup.get(name.toLowerCase())?.githubUrl || stellarContributionRepoUrls[name] || "",
     }));
   }, [data.content.stellarSection.projectNames, data.projects]);
+
+  const [primarySkillRow, secondarySkillRow] = useMemo(() => splitForRows(data.skills), [data.skills]);
+  const [primaryStellarRow, secondaryStellarRow] = useMemo(
+    () => splitForRows(stellarProjects.filter((project) => project.url)),
+    [stellarProjects],
+  );
 
   useLayoutEffect(() => {
     if (reduceMotion) return;
@@ -264,6 +543,7 @@ export function PortfolioClient({
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.from("[data-hero-eyebrow]", { y: 18, opacity: 0, duration: 0.42 })
+        .from("[data-hero-intro]", { y: 18, opacity: 0, duration: 0.42 }, "-=0.2")
         .from("[data-hero-word]", { y: 56, opacity: 0, duration: 0.74, stagger: 0.07 }, "-=0.16")
         .from("[data-hero-role]", { y: 20, opacity: 0, duration: 0.5, stagger: 0.05 }, "-=0.45")
         .from("[data-hero-copy]", { y: 24, opacity: 0, duration: 0.6 }, "-=0.45")
@@ -363,6 +643,10 @@ export function PortfolioClient({
               {data.content.hero.eyebrow}
             </p>
 
+            <p data-hero-intro className="mb-3 text-lg font-medium tracking-[0.08em] text-slate-200 sm:text-xl">
+              I&apos;m Emmanuel,
+            </p>
+
             <h1 className="mb-6 text-4xl font-semibold leading-[1.03] text-white sm:text-5xl lg:text-6xl">
               {data.content.hero.name.split(" ").map((word, index) => (
                 <span key={`${word}-${index}`} data-hero-word className="mr-[0.28em] inline-block">
@@ -426,14 +710,29 @@ export function PortfolioClient({
             />
           </Reveal>
           <Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {data.skills.map((skill) => (
-                <article key={skill._id || skill.name} className="surface-card border-white/10 bg-white/5 p-5">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{skill.category}</p>
-                  <h3 className="mt-2 text-lg font-semibold text-white">{skill.name}</h3>
-                  {skill.level ? <p className="mt-1 text-sm text-slate-400">{skill.level}</p> : null}
-                </article>
-              ))}
+            <div className="surface-card border-white/10 bg-white/5 p-4 sm:p-6">
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
+                  Visual stack rails for the languages, frameworks, data systems, DevOps tools, and blockchain workflows I use most.
+                </p>
+                <span className="chip w-fit border-white/15 bg-white/8 text-slate-100">Moving stack carousel</span>
+              </div>
+
+              <div className="space-y-4">
+                <AutoScrollRail
+                  items={primarySkillRow}
+                  renderItem={(skill) => <TechToken label={skill.name} note={skill.category} />}
+                  durationSeconds={34}
+                  reduceMotion={reduceMotion}
+                />
+                <AutoScrollRail
+                  items={secondarySkillRow.length ? secondarySkillRow : primarySkillRow}
+                  renderItem={(skill) => <TechToken label={skill.name} note={skill.category} />}
+                  direction="reverse"
+                  durationSeconds={38}
+                  reduceMotion={reduceMotion}
+                />
+              </div>
             </div>
           </Reveal>
         </section>
@@ -450,25 +749,30 @@ export function PortfolioClient({
               <p className="mb-3 text-base leading-relaxed text-slate-300">{data.content.stellarSection.intro}</p>
               <p className="mb-7 text-base font-medium text-slate-100">{data.content.stellarSection.contribution}</p>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {stellarProjects.map((project) => (
-                  <article key={project.name} className="rounded-2xl border border-white/10 bg-[#0a1625]/70 p-4">
-                    <h3 className="mb-2 text-sm font-semibold text-white">{project.name}</h3>
-                    {project.url ? (
-                      <Link
-                        href={project.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                      >
-                        <Github className="h-4 w-4" />
-                        Repository
-                      </Link>
-                    ) : (
-                      <span className="text-sm text-slate-400">Repository pending</span>
-                    )}
-                  </article>
-                ))}
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex items-center gap-2 text-sm text-slate-400">
+                  <Blocks className="h-4 w-4 text-primary" />
+                  Continuous repo rails with direct links to each contribution.
+                </p>
+                <span className="chip w-fit border-white/15 bg-white/8 text-slate-100">
+                  {stellarProjects.filter((project) => project.url).length} linked repositories
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <AutoScrollRail
+                  items={primaryStellarRow}
+                  renderItem={(project) => <RepoCarouselCard project={project} />}
+                  durationSeconds={42}
+                  reduceMotion={reduceMotion}
+                />
+                <AutoScrollRail
+                  items={secondaryStellarRow.length ? secondaryStellarRow : primaryStellarRow}
+                  renderItem={(project) => <RepoCarouselCard project={project} />}
+                  direction="reverse"
+                  durationSeconds={48}
+                  reduceMotion={reduceMotion}
+                />
               </div>
             </div>
           </Reveal>

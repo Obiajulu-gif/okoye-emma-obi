@@ -1,16 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import { ArrowDown } from "lucide-react";
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
 
 const CodePattern = () => (
   <svg
-    className="absolute inset-0 w-full h-full opacity-5"
+    className="absolute inset-0 h-full w-full opacity-[0.08]"
     xmlns="http://www.w3.org/2000/svg"
   >
     <pattern
@@ -22,22 +22,9 @@ const CodePattern = () => (
       patternUnits="userSpaceOnUse"
       patternContentUnits="userSpaceOnUse"
     >
-      <circle
-        id="pattern-circle"
-        cx="10"
-        cy="10"
-        r="1.6257413380501518"
-        fill="#000"
-      ></circle>
+      <circle id="pattern-circle" cx="10" cy="10" r="1.6257413380501518" fill="#fff"></circle>
     </pattern>
-    <rect
-      id="rect"
-      x="0"
-      y="0"
-      width="100%"
-      height="100%"
-      fill="url(#pattern-circles)"
-    ></rect>
+    <rect id="rect" x="0" y="0" width="100%" height="100%" fill="url(#pattern-circles)"></rect>
   </svg>
 );
 
@@ -64,23 +51,22 @@ const TypewriterEffect = () => {
       } else {
         timeout = setTimeout(() => setTyping(false), 4000);
       }
+    } else if (displayText.length > 0) {
+      timeout = setTimeout(() => {
+        setDisplayText(currentText.slice(0, displayText.length - 1));
+      }, 100);
     } else {
-      if (displayText.length > 0) {
-        timeout = setTimeout(() => {
-          setDisplayText(currentText.slice(0, displayText.length - 1));
-        }, 100);
-      } else {
-        setTyping(true);
-        setIndex((prevIndex) => (prevIndex + 1) % texts.length);
-      }
+      setTyping(true);
+      setIndex((prevIndex) => (prevIndex + 1) % texts.length);
     }
+
     return () => clearTimeout(timeout);
   }, [displayText, typing, index]);
 
   return (
-    <span className="font-mono inline-block min-h-[2rem]">
+    <span className="inline-block min-h-[2rem] tracking-tight">
       {displayText}
-      <span className="border-r-2 border-current ml-1 animate-blink">&nbsp;</span>
+      <span className="ml-1 border-r-2 border-current animate-blink">&nbsp;</span>
       <style jsx>{`
         @keyframes blink {
           0% {
@@ -103,14 +89,16 @@ const TypewriterEffect = () => {
 
 const CodeNameEffect = () => {
   const name = "Okoye Emmanuel Obiajulu";
+
   return (
     <div className="relative inline-block">
-      {/* Base layer with gradient text */}
-      <span className="text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+      <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
         {name}
-      </span>
-      {/* Glitch layer */}
-      <span className="absolute top-0 left-0 text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 opacity-70 animate-glitch">
+      </h1>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 text-4xl font-semibold tracking-tight text-primary/65 opacity-70 animate-glitch sm:text-5xl lg:text-6xl"
+      >
         {name}
       </span>
       <style jsx>{`
@@ -150,60 +138,59 @@ const CodeNameEffect = () => {
 
 export default function Hero() {
   return (
-    <section
-      id="hero"
-      className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
-    >
-      {/* Programming-themed Background */}
+    <section id="hero" className="relative min-h-screen overflow-hidden border-b border-white/10">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_18%,rgba(72,154,221,0.18),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(252,175,101,0.16),transparent_24%),linear-gradient(180deg,rgba(7,15,26,0.65),rgba(7,15,26,0.18))]" />
+
       <div className="absolute inset-0 z-0">
         <CodePattern />
       </div>
 
-      {/* Animated Gradient */}
-      <div className="absolute inset-0 z-0 opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600 animate-gradient-x"></div>
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_48%)]">
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(20,143,180,0.06),transparent_35%,rgba(240,168,35,0.08)_100%)]"></div>
       </div>
 
-      <div className="container mx-auto px-6 pt-32 pb-20 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+      <div className="section-shell relative z-10 flex min-h-screen items-center py-24">
+        <div className="flex w-full flex-col items-center justify-between gap-12 lg:flex-row lg:gap-16">
           <motion.div
-            className="lg:w-1/2 text-center lg:text-left"
+            className="text-center lg:w-1/2 lg:text-left"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Use the new coding effect component below */}
+            <p className="chip mx-auto mb-5 w-fit border-white/15 bg-white/8 text-slate-100 lg:mx-0">
+              Full-stack and blockchain engineer
+            </p>
             <CodeNameEffect />
-            <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-700 dark:text-gray-300">
+            <h2 className="mb-6 mt-6 text-2xl font-semibold text-slate-200 md:text-3xl">
               <span className="inline-block min-h-[2.5rem]">
                 <TypewriterEffect />
               </span>
             </h2>
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto lg:mx-0">
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-slate-300 md:text-xl lg:mx-0">
               Crafting exceptional digital experiences with modern web technologies. Specialized in
               building scalable full-stack applications.
             </p>
-            <div className="flex justify-center lg:justify-start space-x-4 mb-8">
+            <div className="mb-8 flex justify-center space-x-4 lg:justify-start">
               <Link
                 href="https://github.com/Obiajulu-gif"
-                className="p-3 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
                 aria-label="GitHub Profile"
               >
-                <FaGithub className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <FaGithub className="h-6 w-6 text-slate-100" />
               </Link>
               <Link
                 href="https://www.linkedin.com/in/emmanuel-okoye-79a387200/"
-                className="p-3 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
                 aria-label="LinkedIn Profile"
               >
-                <FaLinkedin className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <FaLinkedin className="h-6 w-6 text-slate-100" />
               </Link>
               <Link
                 href="https://www.x.com/okoye_emma_obi"
-                className="p-3 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
                 aria-label="Email Contact"
               >
-                <FaXTwitter className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <FaXTwitter className="h-6 w-6 text-slate-100" />
               </Link>
             </div>
             <motion.button
@@ -212,14 +199,14 @@ export default function Hero() {
                   .getElementById("about")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl rounded-full"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/90 px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_44px_rgba(20,143,180,0.28)] transition-all duration-300 hover:bg-primary"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >
               Learn More
-              <ArrowDown className="w-4 h-4" />
+              <ArrowDown className="h-4 w-4" />
             </motion.button>
           </motion.div>
           <motion.div
@@ -228,10 +215,11 @@ export default function Hero() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="relative w-[300px] h-[400px] md:w-[400px] md:h-[500px] mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 dark:from-blue-600 dark:to-purple-600 rounded-3xl transform rotate-6 opacity-50"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 dark:from-purple-600 dark:to-blue-600 rounded-3xl transform -rotate-6 opacity-50"></div>
-              <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative mx-auto h-[400px] w-[300px] md:h-[500px] md:w-[400px]">
+              <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-primary/25 via-transparent to-secondary/25 blur-2xl"></div>
+              <div className="absolute inset-0 rotate-[5deg] rounded-[2rem] border border-white/10 bg-white/5"></div>
+              <div className="absolute inset-0 -rotate-[5deg] rounded-[2rem] border border-white/10 bg-white/5"></div>
+              <div className="absolute inset-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#081321]/90 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
                 <Image
                   src="/images/emmanuel.png"
                   alt="Okoye Emmanuel Obiajulu"
@@ -246,12 +234,12 @@ export default function Hero() {
       </div>
 
       <motion.div
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
+        className="absolute bottom-10 left-1/2 flex -translate-x-1/2 transform flex-col items-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.6 }}
       >
-        <div className="w-1 h-12 bg-gradient-to-b from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 rounded-full animate-pulse"></div>
+        <div className="h-12 w-1 rounded-full bg-gradient-to-b from-primary to-secondary animate-pulse"></div>
       </motion.div>
     </section>
   );

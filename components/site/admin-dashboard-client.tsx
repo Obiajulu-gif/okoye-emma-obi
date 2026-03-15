@@ -196,7 +196,7 @@ function ImageSelect({
         id={id}
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        className="skeuo-inset h-11 rounded-[1rem] px-3.5 text-sm text-foreground"
       >
         <option value="">No image selected</option>
         {images.map((image) => (

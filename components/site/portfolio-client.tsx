@@ -294,13 +294,13 @@ function TechToken({
 
   return (
     <div
-      className={`rounded-[1.35rem] border border-white/10 bg-[#081321]/90 ${
+      className={`skeuo-panel ${
         compact ? "min-w-[170px] px-3 py-3" : "min-w-[220px] px-4 py-4"
-      } shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition hover:border-primary/30 hover:bg-[#0b1829]`}
+      } transition hover:border-primary/30 hover:brightness-105`}
     >
       <div className="flex items-center gap-3">
         <div
-          className={`flex ${compact ? "h-9 w-9 rounded-2xl" : "h-11 w-11 rounded-[1.15rem]"} items-center justify-center ${visual.shellClassName}`}
+          className={`skeuo-icon-shell flex ${compact ? "h-9 w-9 rounded-2xl" : "h-11 w-11 rounded-[1.15rem]"} items-center justify-center ${visual.shellClassName}`}
         >
           {visual.imageSrc ? (
             <Image
@@ -317,8 +317,8 @@ function TechToken({
         </div>
 
         <div className="min-w-0">
-          {note ? <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{note}</p> : null}
-          <p className={`${compact ? "text-sm" : "text-base"} truncate font-semibold text-white`}>{label}</p>
+          {note ? <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">{note}</p> : null}
+          <p className={`${compact ? "text-sm" : "text-base"} truncate font-semibold text-foreground`}>{label}</p>
         </div>
       </div>
     </div>
@@ -338,14 +338,14 @@ function RepoCarouselCard({
       href={project.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex min-w-[250px] items-center justify-between gap-4 rounded-[1.4rem] border border-white/10 bg-[#081321]/90 px-4 py-4 shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition hover:border-primary/35 hover:bg-[#0b1829]"
+      className="skeuo-panel group flex min-w-[250px] items-center justify-between gap-4 rounded-[1.4rem] px-4 py-4 transition hover:border-primary/35 hover:brightness-105"
     >
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Open source repo</p>
-        <h3 className="mt-1 text-sm font-semibold text-white">{project.name}</h3>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">Open source repo</p>
+        <h3 className="mt-1 text-sm font-semibold text-foreground">{project.name}</h3>
       </div>
 
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-primary transition group-hover:border-primary/30 group-hover:bg-primary/10">
+      <div className="skeuo-icon-shell flex h-10 w-10 items-center justify-center rounded-2xl text-primary transition group-hover:border-primary/30">
         <Github className="h-4 w-4" />
       </div>
     </Link>
@@ -421,10 +421,10 @@ function ProjectCard({ project, reduceMotion }: { project: ProjectDoc; reduceMot
         cardRef.current = node;
         revealRef.current = node;
       }}
-      className="project-card surface-card relative flex h-full transform-gpu flex-col overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(8,16,29,0.95)_0%,rgba(10,18,29,0.82)_100%)] p-4 sm:p-5"
+      className="project-card surface-card relative flex h-full transform-gpu flex-col overflow-hidden p-4 sm:p-5"
       style={{ transformStyle: "preserve-3d", willChange: reduceMotion ? "auto" : "transform" }}
     >
-      <div className="relative mb-4 h-44 overflow-hidden rounded-2xl border border-white/10">
+      <div className="skeuo-inset relative mb-4 h-44 overflow-hidden rounded-2xl">
         <Image
           src={imageSrc}
           alt={`${project.name} preview`}
@@ -556,7 +556,7 @@ export function PortfolioClient({
     <div className="relative overflow-x-clip pb-20">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_8%,rgba(72,154,221,0.18),transparent_34%),radial-gradient(circle_at_88%_14%,rgba(252,175,101,0.18),transparent_28%),radial-gradient(circle_at_55%_45%,rgba(50,83,122,0.14),transparent_38%)]" />
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050b14]/75 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(18,24,36,0.82)] shadow-[0_12px_26px_rgba(0,0,0,0.28)] backdrop-blur-xl">
         <div className="section-shell flex h-[74px] items-center justify-between">
           <Link href="#hero" className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
             {data.content.presentation.brandName}
@@ -583,7 +583,7 @@ export function PortfolioClient({
           </button>
         </div>
 
-        <div ref={mobileMenuRef} className="hidden border-t border-white/10 bg-[#07101c]/95 lg:hidden">
+        <div ref={mobileMenuRef} className="hidden border-t border-white/10 bg-[rgba(16,22,33,0.95)] lg:hidden">
           <nav className="section-shell grid gap-3 py-5">
             {navItems.map((item) => (
               <Link

@@ -212,7 +212,7 @@ export default function Hero({ content }: { content: SiteContentDoc }) {
                     href={href}
                     target={href.startsWith("http") ? "_blank" : undefined}
                     rel={href.startsWith("http") ? "noreferrer" : undefined}
-                    className="rounded-full border border-white/10 bg-white/8 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.2)] transition-colors duration-300 hover:border-white/20 hover:bg-white/12"
+                    className="skeuo-icon-shell rounded-full p-3 transition duration-300 hover:border-primary/30 hover:brightness-105"
                     aria-label={label}
                   >
                     <Icon className="h-6 w-6 text-slate-100" />
@@ -232,7 +232,7 @@ export default function Hero({ content }: { content: SiteContentDoc }) {
                   onClick={handleAnchorClick(primaryHref)}
                   target={primaryOpensNewTab ? "_blank" : undefined}
                   rel={primaryOpensNewTab ? "noreferrer" : undefined}
-                  className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/90 px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_44px_rgba(20,143,180,0.28)] transition-all duration-300 hover:bg-primary"
+                  className="skeuo-button-shell inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/90 px-6 py-3 text-sm font-semibold text-primary-foreground transition-all duration-300 hover:brightness-105"
                 >
                   {content.hero.primaryCtaLabel}
                 </Link>
@@ -244,7 +244,7 @@ export default function Hero({ content }: { content: SiteContentDoc }) {
                   onClick={handleAnchorClick(secondaryHref)}
                   target={secondaryOpensNewTab ? "_blank" : undefined}
                   rel={secondaryOpensNewTab ? "noreferrer" : undefined}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/6 px-6 py-3 text-sm font-semibold text-slate-100 transition-colors duration-300 hover:border-white/25 hover:bg-white/10"
+                  className="skeuo-button-shell inline-flex items-center gap-2 rounded-full border border-white/15 bg-[linear-gradient(180deg,rgba(61,72,92,0.94)_0%,rgba(29,36,51,0.98)_100%)] px-6 py-3 text-sm font-semibold text-slate-100 transition duration-300 hover:border-white/25 hover:brightness-105"
                 >
                   {content.hero.secondaryCtaLabel}
                 </Link>
@@ -259,9 +259,9 @@ export default function Hero({ content }: { content: SiteContentDoc }) {
           >
             <div className="relative mx-auto h-[400px] w-[300px] md:h-[500px] md:w-[400px]">
               <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-primary/25 via-transparent to-secondary/25 blur-2xl"></div>
-              <div className="absolute inset-0 rotate-[5deg] rounded-[2rem] border border-white/10 bg-white/5"></div>
-              <div className="absolute inset-0 -rotate-[5deg] rounded-[2rem] border border-white/10 bg-white/5"></div>
-              <div className="absolute inset-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#081321]/90 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+              <div className="surface-card absolute inset-0 rotate-[5deg] rounded-[2rem] opacity-90"></div>
+              <div className="surface-card absolute inset-0 -rotate-[5deg] rounded-[2rem] opacity-75"></div>
+              <div className="surface-card absolute inset-0 overflow-hidden rounded-[1.75rem]">
                 <Image
                   src={heroImageSrc}
                   alt={content.hero.name}
